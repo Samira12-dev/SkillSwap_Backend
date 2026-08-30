@@ -19,7 +19,6 @@ public class UpdateProfileRequestDTO {
     @NotBlank(message = "Last name is required")
     private String lastName;
     @Email(message = "Invalid email format")
-    @Email(message = "Invalid email format")
     private String email;
     @NotBlank(message = "City is required")
     private String city;

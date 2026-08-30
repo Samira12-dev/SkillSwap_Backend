@@ -27,10 +27,10 @@ public class Conversation {
     @JoinColumn(name = "swap_request_id", nullable = false, unique = true)
     private SwapRequest swapRequest;
 
-    @OneToMany(mappedBy = "conversation")
+    @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Message> messages;
 
-    @OneToMany(mappedBy = "conversation")
+    @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Session> sessions;
 
     @PrePersist

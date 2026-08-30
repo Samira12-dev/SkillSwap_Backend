@@ -33,7 +33,7 @@ public class Session {
     @Enumerated(EnumType.STRING)
     private SessionStatus status;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", nullable = false)
     private Conversation conversation;
 

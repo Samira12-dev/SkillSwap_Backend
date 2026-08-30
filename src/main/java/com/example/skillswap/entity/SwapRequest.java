@@ -36,15 +36,15 @@ public class SwapRequest {
     @JoinColumn(name = "receiver_id")
     private User receiver;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "skill_offered_id")
     private Skill skillOffered;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "skill_wanted_id")
     private Skill skillWanted;
 
-    @OneToOne(mappedBy = "swapRequest")
+    @OneToOne(mappedBy = "swapRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private Conversation conversation;
 
     @PrePersist
