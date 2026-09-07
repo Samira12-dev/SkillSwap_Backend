@@ -4,9 +4,12 @@ import com.example.skillswap.dto.request.SessionRequestDto;
 import com.example.skillswap.dto.response.SessionResponseDto;
 import com.example.skillswap.entity.Session;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface SessionMapper {
     Session toEntity(SessionRequestDto requestDto);
+
+    @Mapping(source = "conversation.id", target = "conversationId")
     SessionResponseDto toResponse(Session session);
 }

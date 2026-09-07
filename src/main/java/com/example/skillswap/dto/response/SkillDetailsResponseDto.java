@@ -16,6 +16,7 @@ public class SkillDetailsResponseDto {
     private SkillType type;
     private SkillLevel level;
     private Long userId;
+    private String category;
     private String userName;
     private Long skillId;
     private String skillName;
