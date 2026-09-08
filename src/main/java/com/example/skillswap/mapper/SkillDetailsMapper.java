@@ -14,5 +14,6 @@ public interface SkillDetailsMapper {
     @Mapping(source = "user.firstName", target = "userName")
     @Mapping(source = "skill.id", target = "skillId")
     @Mapping(source = "skill.name", target = "skillName")
+    @Mapping(source = "skill.category", target = "category")
     SkillDetailsResponseDto toResponse(SkillDetails skillDetails);
 }
