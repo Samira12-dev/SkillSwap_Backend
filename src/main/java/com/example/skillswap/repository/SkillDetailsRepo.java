@@ -11,4 +11,6 @@ import java.util.Optional;
 public interface SkillDetailsRepo extends JpaRepository<SkillDetails,Long> {
     List<SkillDetails> findByUserId(Long userId);
     Optional<SkillDetails> findByUserIdAndSkillId(Long userId,Long skillId);
+    boolean existsByUserIdAndSkillId(Long userId, Long skillId);
+
 }
