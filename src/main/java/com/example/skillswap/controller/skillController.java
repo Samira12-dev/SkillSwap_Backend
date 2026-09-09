@@ -27,8 +27,8 @@ public class skillController {
     }
 
     @PutMapping("/{id}")
-    public SkillResponseDto updateSkill(@PathVariable Long Id, @Valid @RequestBody SkillRequestDto dto){
-        return service.updateSkill(Id,dto);
+    public SkillResponseDto updateSkill(@PathVariable Long id, @Valid @RequestBody SkillRequestDto dto){
+        return service.updateSkill(id, dto);
     }
 
     @GetMapping

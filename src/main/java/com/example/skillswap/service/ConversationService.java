@@ -33,15 +33,7 @@ public class ConversationService {
         conversation.setSwapRequest(swapRequest);
 
         Conversation  saved= conversationRepo.save(conversation);
-        return  new ConversationResponseDto(
-                saved.getId(),
-                saved.getCreatedAt(),
-                swapRequest.getId(),
-                swapRequest.getSender().getId(),
-                swapRequest.getSender().getFirstName(),
-                swapRequest.getReceiver().getId(),
-                swapRequest.getReceiver().getFirstName()
-        );
+        return  mapper.toResponse(saved);
     }
 
     @Transactional

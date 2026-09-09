@@ -15,7 +15,7 @@ public class SwapRequestRequestDto {
 
     @NotNull(message = "Receiver ID is required")
     private Long receiverId;
-
+    
     @NotNull(message = "Skill offered ID is required")
     private Long skillOfferedId;
 
