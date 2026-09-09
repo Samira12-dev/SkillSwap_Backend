@@ -35,7 +35,7 @@ public class SwapRequestService {
         Skill skillOffered =skillRepo.findById(requestDto.getSkillOfferedId())
                 .orElseThrow(() -> new RuntimeException("Offered skill not found"));
         Skill skillWanted = skillRepo.findById(requestDto.getSkillWantedId())
-                .orElseThrow(() -> new RuntimeException("Wantbed skill not found"));
+                .orElseThrow(() -> new RuntimeException("Wanted skill not found"));
 
         if(!detailsRepo.existsByUserIdAndSkillId(receiver.getId(),requestDto.getSkillWantedId())){
             throw new RuntimeException(
