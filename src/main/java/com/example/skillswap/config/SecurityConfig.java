@@ -66,7 +66,6 @@ public class SecurityConfig {
                         )
                 )
 
-
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -76,8 +75,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**")
                         .permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest()
                         .authenticated()
+
                 )
                 .addFilterBefore(
                         jwtFilter,
