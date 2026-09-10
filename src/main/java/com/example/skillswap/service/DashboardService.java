@@ -2,10 +2,7 @@ package com.example.skillswap.service;
 
 import com.example.skillswap.dto.response.AdminDashboardResponseDto;
 import com.example.skillswap.dto.response.DashboardResponseDto;
-import com.example.skillswap.entity.Message;
-import com.example.skillswap.entity.Notification;
-import com.example.skillswap.entity.Session;
-import com.example.skillswap.entity.SwapRequest;
+import com.example.skillswap.entity.*;
 import com.example.skillswap.enums.SessionStatus;
 import com.example.skillswap.enums.SwapStatus;
 import com.example.skillswap.repository.*;
@@ -26,8 +23,10 @@ public class DashboardService {
     private final UserRepo userRepo;
     private final SkillRepo skillRepo;
 
-    public DashboardResponseDto getUserDashboard(Long userId){
+    public DashboardResponseDto getUserDashboard(String email){
 
+        User user =userRepo.findByEmail(email).orElseThrow(()->new RuntimeException("User not found"));
+        Long userId =user.getId();
         int pendingRequest = swapRequestRepo.findByReceiverIdAndStatus(userId, SwapStatus.PENDING).size();
 
 
