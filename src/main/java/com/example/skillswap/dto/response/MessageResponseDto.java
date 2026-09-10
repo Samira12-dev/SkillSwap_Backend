@@ -17,4 +17,5 @@ public class MessageResponseDto {
     private Long conversationId;
     private Long senderId;
     private String senderName;
+    private boolean isRead;
 }

@@ -32,9 +32,10 @@ public class Message {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
     private User sender;
-
+    private boolean isRead;
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
+        isRead = false;
     }
 }

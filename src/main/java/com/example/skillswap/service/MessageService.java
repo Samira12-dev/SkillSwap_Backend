@@ -60,4 +60,16 @@ public class MessageService {
         messageRepo.delete(message);    }
 
 
+    @Transactional
+    public MessageResponseDto markAsRead(Long id) {
+
+        Message message = messageRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+
+        message.setRead(true);
+
+        Message saved = messageRepo.save(message);
+
+        return mapper.toResponse(saved);
+    }
 }

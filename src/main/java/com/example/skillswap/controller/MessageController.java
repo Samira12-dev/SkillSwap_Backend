@@ -35,4 +35,9 @@ public class MessageController {
     public void deleteMessage(@PathVariable Long id){
         service.deleteMessage(id);
     }
+
+    @PutMapping("/{id}/read")
+    public MessageResponseDto markAsRead(@PathVariable Long id) {
+        return service.markAsRead(id);
+    }
 }
