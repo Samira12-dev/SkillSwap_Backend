@@ -7,6 +7,7 @@ import com.example.skillswap.dto.response.SkillResponseDto;
 import com.example.skillswap.entity.Skill;
 import com.example.skillswap.entity.SkillDetails;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.mapper.SkillDetailsMapper;
 import com.example.skillswap.mapper.SkillMapper;
 import com.example.skillswap.repository.SkillDetailsRepo;
 import com.example.skillswap.repository.SkillRepo;
@@ -24,6 +25,7 @@ public class SkillService {
     private  final SkillMapper mapper;
     private final UserRepo userRepo;
     private final SkillDetailsRepo detailsRepo;
+    private final SkillDetailsMapper detailsMapper;
 
     @Transactional
     public SkillResponseDto createSkill(SkillRequestDto requestDto){
@@ -83,15 +85,7 @@ public class SkillService {
     @Transactional
     public List<SkillDetailsResponseDto> getUserSkills(Long userId){
        List<SkillDetails> listSkills=detailsRepo.findByUserId(userId);
-       return listSkills.stream().map(skillDetails -> {SkillDetailsResponseDto dto = new SkillDetailsResponseDto();
-        dto.setId(skillDetails.getId());
-           dto.setSkillId(skillDetails.getSkill().getId());
-           dto.setSkillName(skillDetails.getSkill().getName());
-           dto.setCategory(skillDetails.getSkill().getCategory());
-           dto.setType(skillDetails.getType());
-           dto.setLevel(skillDetails.getLevel());
-           return dto;
-       }).toList();
+       return listSkills.stream().map(detailsMapper::toResponse).toList();
     }
 
 }
