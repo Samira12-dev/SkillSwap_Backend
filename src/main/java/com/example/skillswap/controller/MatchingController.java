@@ -4,6 +4,7 @@ import com.example.skillswap.dto.response.MatchingResponseDto;
 import com.example.skillswap.service.MatchingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import java.util.List;
 public class MatchingController {
     private  final MatchingService service;
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{userId}")
     public ResponseEntity<List<MatchingResponseDto>> findMatiching(@PathVariable Long userId){
         return ResponseEntity.ok(service.findMatches(userId));

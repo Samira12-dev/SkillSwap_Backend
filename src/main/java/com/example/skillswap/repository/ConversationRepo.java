@@ -12,4 +12,6 @@ public interface ConversationRepo extends JpaRepository<Conversation,Long> {
     Optional<Conversation>findBySwapRequestId(Long swapRequestId);
    Optional<Conversation>findBySwapRequestSenderIdAndSwapRequestReceiverId(Long senderId,Long receiverId);
 
+    List<Conversation> findBySwapRequestSenderId(Long senderId);
+    List<Conversation> findBySwapRequestReceiverId(Long receiverId);
 }

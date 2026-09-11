@@ -15,6 +15,7 @@ public class DashboardController {
 
     private final DashboardService service;
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/user/{userId}")
     public DashboardResponseDto getUserDashboard(Authentication authentication) {
      String email = authentication.getName();

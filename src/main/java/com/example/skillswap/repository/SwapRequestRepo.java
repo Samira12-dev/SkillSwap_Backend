@@ -11,5 +11,5 @@ import java.util.List;
 public interface SwapRequestRepo extends JpaRepository<SwapRequest,Long> {
     List<SwapRequest> findByReceiverId(Long receiverId);
     List<SwapRequest> findBySenderId(Long senderId);
-    List<SwapRequest> findByReceiverIdAndStatus(Long receiverId, SwapStatus status);
+    List<SwapRequest> findByReceiverIdAndSwapStatus(Long receiverId, SwapStatus status);
 }

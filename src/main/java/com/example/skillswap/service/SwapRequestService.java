@@ -123,8 +123,11 @@ public class SwapRequestService {
     }
 
     @Transactional
-    public SwapRequestResponseDto completeSwapRequest(Long swapId){
+    public SwapRequestResponseDto completeSwapRequest(Long swapId,Long userId){
         SwapRequest swapRequest=repo.findById(swapId).orElseThrow(()->new RuntimeException("Swap request not found "));
+        if(!swapRequest.getSender().getId().equals(userId) && !swapRequest.getReceiver().getId().equals(userId)){
+            throw  new RuntimeException("You are not allowed to complete this swap");
+        }
         if(swapRequest.getSwapStatus()!=SwapStatus.ACCEPTED){
             throw new RuntimeException("Swap is not accepted");
         }

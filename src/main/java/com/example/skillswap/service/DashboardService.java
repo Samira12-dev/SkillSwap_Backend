@@ -27,7 +27,7 @@ public class DashboardService {
 
         User user =userRepo.findByEmail(email).orElseThrow(()->new RuntimeException("User not found"));
         Long userId =user.getId();
-        int pendingRequest = swapRequestRepo.findByReceiverIdAndStatus(userId, SwapStatus.PENDING).size();
+        int pendingRequest = swapRequestRepo.findByReceiverIdAndSwapStatus(userId, SwapStatus.PENDING).size();
 
 
         List<SwapRequest>sentRequest=swapRequestRepo.findBySenderId(userId);

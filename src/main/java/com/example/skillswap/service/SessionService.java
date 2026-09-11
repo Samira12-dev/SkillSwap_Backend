@@ -92,9 +92,13 @@ public class SessionService {
      }
 
      @Transactional
-    public SessionResponseDto completeSession(Long sessionId){
+    public SessionResponseDto completeSession(Long sessionId,Long userId){
         Session session=sessionRepo.findById(sessionId).orElseThrow(()->new RuntimeException("Session not found"));
-        if(session.getStatus()!=SessionStatus.CONFIRMED){
+         SwapRequest swapRequest = session.getConversation().getSwapRequest();
+         if(!swapRequest.getSender().getId().equals(userId) && !swapRequest.getReceiver().getId().equals(userId)){
+             throw new RuntimeException("You are not allowed to complete this session");
+         }
+         if(session.getStatus()!=SessionStatus.CONFIRMED){
             throw  new RuntimeException("Only confirmed sessions can be completed");
         }
         session.setStatus(SessionStatus.COMPLETED);

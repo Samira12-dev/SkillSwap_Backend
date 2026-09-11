@@ -6,6 +6,7 @@ import com.example.skillswap.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,18 +17,22 @@ import java.util.List;
 public class ReviewController {
     private  final ReviewService service;
 
-    @PostMapping
-    public ReviewResponseDto createReview(@Valid @RequestBody @RequestParam ReviewRequestDto dto, @PathVariable Long userId){
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("{userId}")
+    public ReviewResponseDto createReview(@PathVariable Long userId,@Valid @RequestBody  ReviewRequestDto dto){
         return service.createReview(dto,userId);
     }
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ReviewResponseDto>>getReviewsByUser(@PathVariable Long userId){
         return ResponseEntity.ok(service.getReviewsByUser(userId));
     }
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{reviewId}")
     public ReviewResponseDto getReviewById(@PathVariable Long reviewId){
         return service.getReviewById(reviewId);
     }
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/user/{userId}/average")
     public double calculateAverageRating (@PathVariable Long userId){
      return service.calculateAverageRating(userId);

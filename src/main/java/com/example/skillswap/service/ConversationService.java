@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -44,10 +45,10 @@ public class ConversationService {
 
     @Transactional
     public List<ConversationResponseDto> getMyConversations(Long userId){
-        return conversationRepo.findBySwapRequestSenderIdAndSwapRequestReceiverId(userId,userId)
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+        List<Conversation> conversations = new ArrayList<>();
+        conversations.addAll(conversationRepo.findBySwapRequestSenderId(userId));
+        conversations.addAll(conversationRepo.findBySwapRequestReceiverId(userId));
+        return conversations.stream().map(mapper::toResponse).toList();
     }
 
     @Transactional

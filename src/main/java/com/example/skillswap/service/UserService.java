@@ -29,8 +29,12 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDTO updateProfile(Long userId, UpdateProfileRequestDTO dto){
-        User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public UserResponseDTO updateProfile(Long userId,String email, UpdateProfileRequestDTO dto){
+        User userNow = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        if(!userNow.getId().equals(userId)){
+            throw  new RuntimeException("you can only update your profile");
+        }
+        User user =userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
         mapper.updateUser(dto,user);
         User savedUser= userRepo.save(user);
         return mapper.toResponse(savedUser);

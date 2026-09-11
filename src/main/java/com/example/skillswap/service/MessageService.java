@@ -4,6 +4,7 @@ import com.example.skillswap.dto.request.MessageRequestDto;
 import com.example.skillswap.dto.response.MessageResponseDto;
 import com.example.skillswap.entity.Conversation;
 import com.example.skillswap.entity.Message;
+import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
 import com.example.skillswap.mapper.MessageMapper;
 import com.example.skillswap.repository.ConversationRepo;
@@ -28,7 +29,11 @@ public class MessageService {
     public MessageResponseDto createMessage(MessageRequestDto messageRequestDto,Long conversationID,Long userId){
         Conversation conversation =conversationRepo.findById(conversationID).orElseThrow(()->
                 new RuntimeException("Conversation not found"));
-       User sender= userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
+        SwapRequest swap = conversation.getSwapRequest();
+        if(!swap.getSender().getId().equals(userId) && !swap.getReceiver().getId().equals(userId)){
+            throw new RuntimeException("You are not part of this conversation");
+        }
+        User sender= userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
 
         Message message =new Message();
         message.setSender(sender);
