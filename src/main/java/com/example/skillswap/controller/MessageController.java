@@ -5,11 +5,12 @@ import com.example.skillswap.dto.response.MessageResponseDto;
 import com.example.skillswap.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -31,8 +32,8 @@ public class MessageController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/conversation/{conversationId}")
-    public ResponseEntity<List<MessageResponseDto>> getMessagesByConversation(@PathVariable Long conversationId,@RequestParam Long userId){
-        return ResponseEntity.ok(service.getMessagesByConversation(conversationId,userId));
+    public ResponseEntity<Page<MessageResponseDto>> getMessagesByConversation(@PathVariable Long conversationId,@RequestParam Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable){
+        return ResponseEntity.ok(service.getMessagesByConversation(conversationId,userId,pageable));
     }
 
     @PreAuthorize("hasRole('USER')")

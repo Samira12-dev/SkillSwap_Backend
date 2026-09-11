@@ -13,9 +13,9 @@ import com.example.skillswap.repository.SwapRequestRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -58,24 +58,18 @@ public class SwapRequestService {
     }
 
     @Transactional
-    public List<SwapRequestResponseDto> getAllSwapRequests(){
-        return repo.findAll().stream()
-                .map(mapper::toResponse).toList();
+    public Page<SwapRequestResponseDto> getAllSwapRequests(Pageable pageable){
+        return repo.findAll(pageable).map(mapper::toResponse);
     }
 
     @Transactional
-    public List<SwapRequestResponseDto>getReceivedRequests(Long userId){
-        List<SwapRequest> listOfRequestReceived =repo.findByReceiverId(userId);
-        return listOfRequestReceived.stream()
-                .map(mapper::toResponse).toList();
-
+    public Page<SwapRequestResponseDto>getReceivedRequests(Long userId, Pageable pageable){
+        return repo.findByReceiverId(userId, pageable).map(mapper::toResponse);
     }
 
     @Transactional
-    public List<SwapRequestResponseDto>getSentRequests(Long userId){
-        List<SwapRequest> listOfRequestSender = repo.findBySenderId(userId);
-        return listOfRequestSender.stream()
-                .map(mapper::toResponse).toList();
+    public Page<SwapRequestResponseDto>getSentRequests(Long userId, Pageable pageable){
+        return repo.findBySenderId(userId, pageable).map(mapper::toResponse);
     }
 
     @Transactional

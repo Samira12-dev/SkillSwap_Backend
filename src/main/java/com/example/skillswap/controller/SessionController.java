@@ -6,11 +6,12 @@ import com.example.skillswap.service.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/sessions")
@@ -43,8 +44,8 @@ public class SessionController {
     @Operation(summary = "Get sessions by swap")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/swap/{swapId}")
-    public ResponseEntity<List<SessionResponseDto>> getSessionsBySwap(@PathVariable Long swapId){
-        return ResponseEntity.ok(service.getSessionsBySwap(swapId));
+    public ResponseEntity<Page<SessionResponseDto>> getSessionsBySwap(@PathVariable Long swapId, @PageableDefault(page = 0, size = 10) Pageable pageable){
+        return ResponseEntity.ok(service.getSessionsBySwap(swapId, pageable));
     }
 
     @Operation(summary = "Accept session")

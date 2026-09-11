@@ -11,9 +11,9 @@ import com.example.skillswap.repository.SkillRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,16 +37,12 @@ public class SkillDetailsService {
     }
 
     @Transactional
-    public List<SkillDetailsResponseDto> getAllSkills(){
-        return skillDetailsRepo.findAll().stream()
-                .map(mapper::toResponse).toList();
+    public Page<SkillDetailsResponseDto> getAllSkills(Pageable pageable){
+        return skillDetailsRepo.findAll(pageable).map(mapper::toResponse);
     }
 
-    public List<SkillDetailsResponseDto> getAllMySkills(Long userId) {
-        return skillDetailsRepo.findByUserId(userId)
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+    public Page<SkillDetailsResponseDto> getAllMySkills(Long userId, Pageable pageable) {
+        return skillDetailsRepo.findByUserId(userId, pageable).map(mapper::toResponse);
     }
 
     @Transactional

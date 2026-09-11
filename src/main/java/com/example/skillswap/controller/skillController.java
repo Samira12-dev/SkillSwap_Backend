@@ -4,14 +4,17 @@ import com.example.skillswap.dto.request.SkillDetailsRequestDto;
 import com.example.skillswap.dto.request.SkillRequestDto;
 import com.example.skillswap.dto.response.SkillDetailsResponseDto;
 import com.example.skillswap.dto.response.SkillResponseDto;
+import com.example.skillswap.entity.User;
 import com.example.skillswap.service.SkillService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/skills")
@@ -36,8 +39,10 @@ public class skillController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping
-    public ResponseEntity<List< SkillResponseDto>>getAll(){
-        return ResponseEntity.ok(service.findAll()) ;
+    public ResponseEntity<Page< SkillResponseDto>>getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(service.findAll(page,size)) ;
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -52,23 +57,23 @@ public class skillController {
         service.deleteSkill(id);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PostMapping("/users/{userId}/skill")
-    public ResponseEntity<SkillDetailsResponseDto>addSkillToUser(@PathVariable Long userId, @RequestBody SkillDetailsRequestDto requestDto){
-        service.addSkillToUser(userId, requestDto);
+    public ResponseEntity<SkillDetailsResponseDto>addSkillToUser(@PathVariable Long userId, @RequestBody SkillDetailsRequestDto requestDto,@AuthenticationPrincipal User currentUser){
+        service.addSkillToUser(userId, requestDto,currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping("/users/{userId}/skills/{skillId}")
-    public void removeSkillFromUserremoveSkillFromUser(@PathVariable Long userId,@PathVariable Long skillId){
-        service.removeSkillFromUser(userId,skillId);
+    public void removeSkillFromUser(@PathVariable Long userId,@PathVariable Long skillId,@AuthenticationPrincipal User currentUser){
+        service.removeSkillFromUser(userId,skillId,currentUser);
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/users/{userId}/skills")
-    public ResponseEntity<List<SkillDetailsResponseDto>>getUserSkills(@PathVariable Long userId){
-        return ResponseEntity.ok(service.getUserSkills(userId));
+    public ResponseEntity<Page<SkillDetailsResponseDto>>getUserSkills(@PathVariable Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable,@AuthenticationPrincipal User currentUser){
+        return ResponseEntity.ok(service.getUserSkills(userId, pageable,currentUser));
     }
 
 }

@@ -11,9 +11,9 @@ import com.example.skillswap.repository.ConversationRepo;
 import com.example.skillswap.repository.SessionRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -64,11 +64,9 @@ public class SessionService {
     }
 
      @Transactional
-    public List<SessionResponseDto> getSessionsBySwap(Long swapId){
-        List<Session> sessions= sessionRepo.findByConversationSwapRequestId(swapId);
-        return sessions.stream()
-                .map(mapper::toResponse)
-                .toList();
+    public Page<SessionResponseDto> getSessionsBySwap(Long swapId, Pageable pageable){
+        return sessionRepo.findByConversationSwapRequestId(swapId, pageable)
+                .map(mapper::toResponse);
      }
 
      @Transactional

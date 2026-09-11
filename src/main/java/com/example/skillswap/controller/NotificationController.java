@@ -4,11 +4,12 @@ import com.example.skillswap.dto.response.NotificationResponseDto;
 import com.example.skillswap.enums.NotificationType;
 import com.example.skillswap.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -30,13 +31,13 @@ public class NotificationController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<NotificationResponseDto>> getAllNotifications(){
-        return ResponseEntity.ok(service.getAllNotifications());
+    public ResponseEntity<Page<NotificationResponseDto>> getAllNotifications(@PageableDefault(page = 0, size = 10) Pageable pageable){
+        return ResponseEntity.ok(service.getAllNotifications(pageable));
     }
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<NotificationResponseDto>>getNotificationsByUser(@PathVariable Long userId){
-        return ResponseEntity.ok(service.getNotificationsByUser(userId));
+    public ResponseEntity<Page<NotificationResponseDto>>getNotificationsByUser(@PathVariable Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable){
+        return ResponseEntity.ok(service.getNotificationsByUser(userId, pageable));
     }
 
     @PreAuthorize("hasRole('USER')")

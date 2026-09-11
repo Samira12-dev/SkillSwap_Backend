@@ -7,6 +7,9 @@ import com.example.skillswap.enums.SkillType;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,7 +40,7 @@ public class MatchingService {
     }
 
     @Transactional
-    public List<MatchingResponseDto> findMatches(Long userId){
+    public Page<MatchingResponseDto> findMatches(Long userId, Pageable pageable){
         User currentUser= userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
         List<User> users =userRepo.findAll();
         List<MatchingResponseDto> matches= new ArrayList<>();
@@ -55,7 +58,12 @@ public class MatchingService {
                 matches.add(dto);
             }
         }
-        return matches;
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), matches.size());
+        if (start >= matches.size()) {
+            return new PageImpl<>(List.of(), pageable, matches.size());
+        }
+        return new PageImpl<>(matches.subList(start, end), pageable, matches.size());
     }
 
 }

@@ -9,9 +9,9 @@ import com.example.skillswap.repository.NotificationRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -45,15 +45,13 @@ public class NotificationService {
     }
 
     @Transactional
-    public List<NotificationResponseDto> getAllNotifications(){
-        return repo.findAll().stream()
-                .map(mapper::toResponse).toList();
+    public Page<NotificationResponseDto> getAllNotifications(Pageable pageable){
+        return repo.findAll(pageable).map(mapper::toResponse);
     }
 
     @Transactional
-    public List<NotificationResponseDto> getNotificationsByUser(Long userId){
-        List<Notification> notifications =repo.findByUserId(userId);
-        return notifications.stream().map(mapper::toResponse).toList();
+    public Page<NotificationResponseDto> getNotificationsByUser(Long userId, Pageable pageable){
+        return repo.findByUserId(userId, pageable).map(mapper::toResponse);
     }
     @Transactional
     public NotificationResponseDto markAsRead(Long notificationId, Long userId){

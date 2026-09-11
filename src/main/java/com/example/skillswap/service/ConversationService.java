@@ -9,6 +9,9 @@ import com.example.skillswap.repository.ConversationRepo;
 import com.example.skillswap.repository.SwapRequestRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -52,11 +55,18 @@ public class ConversationService {
     }
 
     @Transactional
-    public List<ConversationResponseDto> getMyConversations(Long userId){
-        List<Conversation> conversations = new ArrayList<>();
-        conversations.addAll(conversationRepo.findBySwapRequestSenderId(userId));
-        conversations.addAll(conversationRepo.findBySwapRequestReceiverId(userId));
-        return conversations.stream().map(mapper::toResponse).toList();
+    public Page<ConversationResponseDto> getMyConversations(Long userId, Pageable pageable){
+        List<Conversation> all = new ArrayList<>();
+        all.addAll(conversationRepo.findBySwapRequestSenderId(userId, Pageable.unpaged()).getContent());
+        all.addAll(conversationRepo.findBySwapRequestReceiverId(userId, Pageable.unpaged()).getContent());
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), all.size());
+        if (start >= all.size()) {
+            return new PageImpl<>(List.of(), pageable, all.size());
+        }
+        List<ConversationResponseDto> content = all.subList(start, end).stream()
+                .map(mapper::toResponse).toList();
+        return new PageImpl<>(content, pageable, all.size());
     }
 
     @Transactional

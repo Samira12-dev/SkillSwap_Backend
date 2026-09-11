@@ -12,9 +12,9 @@ import com.example.skillswap.repository.MessageRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +56,7 @@ public class MessageService {
     }
 
     @Transactional
-    public List<MessageResponseDto> getMessagesByConversation(Long conversationId, Long userId) {
+    public Page<MessageResponseDto> getMessagesByConversation(Long conversationId, Long userId, Pageable pageable) {
         Conversation conversation = conversationRepo.findById(conversationId)
                 .orElseThrow(() -> new RuntimeException("Conversation not found"));
         SwapRequest swap = conversation.getSwapRequest();
@@ -64,11 +64,8 @@ public class MessageService {
                 && !swap.getReceiver().getId().equals(userId)) {
             throw new RuntimeException("You are not part of this conversation");
         }
-        List<Message> messages =
-                messageRepo.findByConversationId(conversationId);
-        return messages.stream()
-                .map(mapper::toResponse)
-                .toList();
+        return messageRepo.findByConversationId(conversationId, pageable)
+                .map(mapper::toResponse);
     }
 
     @Transactional

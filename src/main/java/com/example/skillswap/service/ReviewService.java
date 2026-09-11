@@ -13,9 +13,10 @@ import com.example.skillswap.repository.SessionRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -69,22 +70,8 @@ public class ReviewService {
         return mapper.toResponse(saved);
     }
     @Transactional
-    public List<ReviewResponseDto> getReviewsByUser(Long userId){
-      List<Review>reviews =repo.findByRevieweeId(userId);
-        List<ReviewResponseDto> result= new ArrayList<>();
-        for (Review review:reviews){
-            result.add(new ReviewResponseDto(
-                    review.getId(),
-                    review.getRating(),
-                    review.getComment(),
-                    review.getReviewer().getId(),
-                    review.getReviewer().getFirstName(),
-                    review.getReviewee().getId(),
-                    review.getReviewee().getFirstName(),
-                    review.getSession().getId()
-            ));
-        }
-        return result;
+    public Page<ReviewResponseDto> getReviewsByUser(Long userId, Pageable pageable){
+        return repo.findByRevieweeId(userId, pageable).map(mapper::toResponse);
     }
     @Transactional
     public ReviewResponseDto getReviewById(Long reviewId){
@@ -93,7 +80,7 @@ public class ReviewService {
     }
     @Transactional
     public  double calculateAverageRating(Long userId){
-        List<Review> reviewList =repo.findByRevieweeId(userId);
+        List<Review> reviewList = repo.findByRevieweeId(userId, Pageable.unpaged()).getContent();
         if(reviewList.isEmpty()){
             return 0;
         }

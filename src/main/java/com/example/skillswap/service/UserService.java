@@ -7,9 +7,9 @@ import com.example.skillswap.mapper.UserMapper;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,9 +23,10 @@ public class UserService {
         User user=userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
         return mapper.toResponse(user);
     }
+
     @Transactional
-    public List<UserResponseDTO>getAllUsers(){
-        return userRepo.findAll().stream().map(mapper::toResponse).toList();
+    public Page<UserResponseDTO> getAllUsers(Pageable pageable){
+        return userRepo.findAll(pageable).map(mapper::toResponse);
     }
 
     @Transactional

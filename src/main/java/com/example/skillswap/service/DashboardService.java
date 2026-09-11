@@ -7,6 +7,7 @@ import com.example.skillswap.enums.SessionStatus;
 import com.example.skillswap.enums.SwapStatus;
 import com.example.skillswap.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,12 +29,12 @@ public class DashboardService {
 
         int pendingRequest = swapRequestRepo.findByReceiverIdAndSwapStatus(userId, SwapStatus.PENDING).size();
 
-        List<SwapRequest>sentRequest=swapRequestRepo.findBySenderId(userId);
-        List<SwapRequest> receivedRequest= swapRequestRepo.findByReceiverId(userId);
+                List<SwapRequest>sentRequest=swapRequestRepo.findBySenderId(userId, Pageable.unpaged()).getContent();
+        List<SwapRequest> receivedRequest= swapRequestRepo.findByReceiverId(userId, Pageable.unpaged()).getContent();
         int upComingSession =0;
         for(SwapRequest swap :sentRequest){
             if(swap.getConversation()!= null){
-               List<Session>sessions =sessionRepo.findByConversationSwapRequestId(swap.getId());
+               List<Session>sessions =sessionRepo.findByConversationSwapRequestId(swap.getId(), Pageable.unpaged()).getContent();
                for (Session session:sessions){
                    if(session.getDate().isAfter(LocalDateTime.now())){
                        upComingSession ++;
@@ -43,7 +44,7 @@ public class DashboardService {
         }
         for (SwapRequest request :receivedRequest){
             if(request.getConversation()!= null){
-                List<Session> sessions= sessionRepo.findByConversationSwapRequestId(request.getId());
+                List<Session> sessions= sessionRepo.findByConversationSwapRequestId(request.getId(), Pageable.unpaged()).getContent();
                 for (Session session:sessions){
                     if (session.getDate().isAfter(LocalDateTime.now())){
                         upComingSession ++;
@@ -56,7 +57,7 @@ public class DashboardService {
         int unReadMessage =0;
         for(SwapRequest request :receivedRequest){
             if(request.getConversation() != null){
-                List<Message> messages =messageRepo.findByConversationId(request.getConversation().getId());
+                List<Message> messages =messageRepo.findByConversationId(request.getConversation().getId(), Pageable.unpaged()).getContent();
 
                 for (Message message:messages){
                     if(!message.isRead()&& !message.getSender().getId().equals(userId)){
@@ -66,7 +67,7 @@ public class DashboardService {
             }
         }
         int notificationIsRead= 0;
-        List<Notification> notifications= notificationRepo.findByUserId(userId);
+        List<Notification> notifications= notificationRepo.findByUserId(userId, Pageable.unpaged()).getContent();
         for(Notification notification1 :notifications){
             if(!notification1.isRead()){
                 notificationIsRead ++;

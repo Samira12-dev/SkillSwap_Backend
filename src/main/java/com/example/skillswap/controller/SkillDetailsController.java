@@ -5,11 +5,12 @@ import com.example.skillswap.dto.response.SkillDetailsResponseDto;
 import com.example.skillswap.service.SkillDetailsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/skilldetails")
@@ -25,13 +26,13 @@ public class SkillDetailsController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping
-    public ResponseEntity<List<SkillDetailsResponseDto>> getAllSkills(){
-        return ResponseEntity.ok(service.getAllSkills()) ;
+    public ResponseEntity<Page<SkillDetailsResponseDto>> getAllSkills(@PageableDefault(page = 0, size = 10) Pageable pageable){
+        return ResponseEntity.ok(service.getAllSkills(pageable)) ;
     }
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/my/{userId}")
-    public ResponseEntity<List<SkillDetailsResponseDto>>getAllMySkills(@PathVariable Long userId){
-        return ResponseEntity.ok(service.getAllMySkills(userId));
+    public ResponseEntity<Page<SkillDetailsResponseDto>>getAllMySkills(@PathVariable Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable){
+        return ResponseEntity.ok(service.getAllMySkills(userId, pageable));
     }
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{id}")
