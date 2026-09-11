@@ -25,25 +25,25 @@ public class MessageController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}")
-    public MessageResponseDto getMessageById(@PathVariable Long id){
-        return service.getMessageById(id);
+    public MessageResponseDto getMessageById(@PathVariable Long id,@RequestParam Long userId){
+        return service.getMessageById(id,userId);
     }
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/conversation/{conversationId}")
-    public ResponseEntity<List<MessageResponseDto>> getMessagesByConversation(@PathVariable Long conversationId){
-        return ResponseEntity.ok(service.getMessagesByConversation(conversationId));
+    public ResponseEntity<List<MessageResponseDto>> getMessagesByConversation(@PathVariable Long conversationId,@RequestParam Long userId){
+        return ResponseEntity.ok(service.getMessagesByConversation(conversationId,userId));
     }
 
     @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{id}")
-    public void deleteMessage(@PathVariable Long id){
-        service.deleteMessage(id);
+    public void deleteMessage(@PathVariable Long id,@RequestParam Long userId){
+        service.deleteMessage(id,userId);
     }
 
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}/read")
-    public MessageResponseDto markAsRead(@PathVariable Long id) {
-        return service.markAsRead(id);
+    public MessageResponseDto markAsRead(@PathVariable Long id,@RequestParam Long userId) {
+        return service.markAsRead(id,userId);
     }
 }

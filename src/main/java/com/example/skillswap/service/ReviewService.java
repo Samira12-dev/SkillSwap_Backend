@@ -4,6 +4,7 @@ import com.example.skillswap.dto.request.ReviewRequestDto;
 import com.example.skillswap.dto.response.ReviewResponseDto;
 import com.example.skillswap.entity.Review;
 import com.example.skillswap.entity.Session;
+import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
 import com.example.skillswap.enums.SessionStatus;
 import com.example.skillswap.mapper.ReviewMapper;
@@ -37,12 +38,33 @@ public class ReviewService {
         if(session.getStatus() != SessionStatus.COMPLETED){
             throw  new RuntimeException("A review can only be done if the session has been completed");
         }
+
+        SwapRequest swapRequest = session.getConversation().getSwapRequest();
+        Long senderId = swapRequest.getSender().getId();
+        Long receiverId = swapRequest.getReceiver().getId();
+
+        if (!reviewerId.equals(senderId) && !reviewerId.equals(receiverId)) {
+            throw new RuntimeException("You are not a participant in this session");
+        }
+        if (reviewerId.equals(senderId)) {
+            if (!requestDto.getRevieweeId().equals(receiverId)) {
+                throw new RuntimeException("You can only review the other participant");
+            }
+        }
+
+        if (reviewerId.equals(receiverId)) {
+            if (!requestDto.getRevieweeId().equals(senderId)) {
+                throw new RuntimeException("You can only review the other participant");
+            }
+        }
+
         Review review =new Review();
         review.setRating(requestDto.getRating());
         review.setComment(requestDto.getComment());
         review.setSession(session);
         review.setReviewer(reviewer);
         review.setReviewee(reviewee);
+
         Review saved= repo.save(review);
         return mapper.toResponse(saved);
     }

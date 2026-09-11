@@ -35,9 +35,12 @@ public class NotificationService {
     }
 
     @Transactional
-    public NotificationResponseDto getNotificationById(Long Id){
-       Notification notification = repo.findById(Id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public NotificationResponseDto getNotificationById(Long notificationId, Long userId) {
+        Notification notification = repo.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to see this notification");
+        }
         return mapper.toResponse(notification);
     }
 
@@ -50,16 +53,18 @@ public class NotificationService {
     @Transactional
     public List<NotificationResponseDto> getNotificationsByUser(Long userId){
         List<Notification> notifications =repo.findByUserId(userId);
-
         return notifications.stream().map(mapper::toResponse).toList();
     }
     @Transactional
-    public NotificationResponseDto markAsRead(Long notificationId){
+    public NotificationResponseDto markAsRead(Long notificationId, Long userId){
         Notification notification = repo.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to modify this notification");
+        }
         notification.setRead(true);
         Notification saved = repo.save(notification);
-        return  mapper.toResponse(saved);
+        return mapper.toResponse(saved);
     }
 
 }

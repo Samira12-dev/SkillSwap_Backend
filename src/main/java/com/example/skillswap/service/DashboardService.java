@@ -23,12 +23,10 @@ public class DashboardService {
     private final UserRepo userRepo;
     private final SkillRepo skillRepo;
 
-    public DashboardResponseDto getUserDashboard(String email){
+    public DashboardResponseDto getUserDashboard(Long userId){
 
-        User user =userRepo.findByEmail(email).orElseThrow(()->new RuntimeException("User not found"));
-        Long userId =user.getId();
+
         int pendingRequest = swapRequestRepo.findByReceiverIdAndSwapStatus(userId, SwapStatus.PENDING).size();
-
 
         List<SwapRequest>sentRequest=swapRequestRepo.findBySenderId(userId);
         List<SwapRequest> receivedRequest= swapRequestRepo.findByReceiverId(userId);

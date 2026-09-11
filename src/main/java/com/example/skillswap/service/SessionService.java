@@ -25,10 +25,15 @@ public class SessionService {
 
 
     @Transactional
-    public SessionResponseDto createSession(SessionRequestDto requestDto){
+    public SessionResponseDto createSession(SessionRequestDto requestDto,Long userId){
         Conversation conversation=conversationRepo.findById(requestDto.getConversationId())
                 .orElseThrow(()->new RuntimeException("Conversation not found"));
-        
+
+        SwapRequest swapRequest = conversation.getSwapRequest();
+        if(!swapRequest.getSender().getId().equals(userId) && !swapRequest.getReceiver().getId().equals(userId)){
+            throw new RuntimeException("You are not part of this conversation");
+
+        }
         Session session =new Session();
         session.setDate(requestDto.getDate());
         session.setDuration(requestDto.getDuration());
@@ -41,8 +46,13 @@ public class SessionService {
     }
 
     @Transactional
-    public SessionResponseDto updateSession(Long sessionId,SessionRequestDto dto){
+    public SessionResponseDto updateSession(Long sessionId,SessionRequestDto dto,Long userId){
         Session session=sessionRepo.findById(sessionId).orElseThrow(()->new RuntimeException("Session not found"));
+        SwapRequest swapRequest = session.getConversation().getSwapRequest();
+        if (!swapRequest.getSender().getId().equals(userId)
+                && !swapRequest.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this session");
+        }
         mapper.updateSession(dto,session);
         return mapper.toResponse(session);
     }

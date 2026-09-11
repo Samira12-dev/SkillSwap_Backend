@@ -22,15 +22,15 @@ public class SessionController {
     @Operation(summary = "Create a session")
     @PreAuthorize("hasRole('USER')")
     @PostMapping
-    public SessionResponseDto createSession(@Valid @RequestBody SessionRequestDto dto){
-        return service.createSession(dto);
+    public SessionResponseDto createSession(@Valid @RequestBody SessionRequestDto dto,@RequestParam Long userId){
+        return service.createSession(dto,userId);
     }
 
     @Operation(summary = "Update a session")
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{sessionId}")
-    public SessionResponseDto updateSession(@PathVariable Long sessionId, @Valid @RequestBody SessionRequestDto dto){
-        return service.updateSession(sessionId, dto);
+    public SessionResponseDto updateSession(@PathVariable Long sessionId, @Valid @RequestBody SessionRequestDto dto, @RequestParam Long userId){
+        return service.updateSession(sessionId, dto,userId);
     }
 
     @Operation(summary = "Get session by ID")

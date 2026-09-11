@@ -16,15 +16,15 @@ public class ConversationController {
     private  final ConversationService service;
 
     @PreAuthorize("hasRole('USER')")
-    @PostMapping("/{swapId}")
-    public ConversationResponseDto createConversation(@PathVariable Long swapId){
-        return  service.createCoersation(swapId);
+    @PostMapping("/{swapId}/user/{userId}")
+    public ConversationResponseDto createConversation(@PathVariable Long swapId, @PathVariable Long userId) {
+        return service.createCoersation(swapId, userId);
     }
 
     @PreAuthorize("hasRole('USER')")
-    @GetMapping("/{id}")
-    public ConversationResponseDto getConversationById(@PathVariable Long id){
-        return service.getConversationById(id);
+    @GetMapping("/{id}/user/{userId}")
+    public ConversationResponseDto getConversationById(@PathVariable Long id, @PathVariable Long userId){
+        return service.getConversationById(id,userId);
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -34,9 +34,9 @@ public class ConversationController {
     }
 
     @PreAuthorize("hasRole('USER')")
-    @GetMapping("/user1/{userId1}/user2/{userId2}")
-    public ConversationResponseDto getConversationBetweenUsers(@PathVariable Long userId1, @PathVariable Long userId2){
-        return service.getConversationBetweenUsers(userId1,userId2);
+    @GetMapping("/user1/{userId1}/user2/{userId2}/user/{requestuser}")
+    public ConversationResponseDto getConversationBetweenUsers(@PathVariable Long userId1, @PathVariable Long userId2,@PathVariable Long requestuser){
+        return service.getConversationBetweenUsers(userId1,userId2,requestuser);
     }
 
 }

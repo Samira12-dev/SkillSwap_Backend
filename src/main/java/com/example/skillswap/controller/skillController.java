@@ -53,7 +53,7 @@ public class skillController {
     }
 
     @PreAuthorize("hasRole('USER')")
-    @PostMapping("/users/{userId}/skills")
+    @PostMapping("/users/{userId}/skill")
     public ResponseEntity<SkillDetailsResponseDto>addSkillToUser(@PathVariable Long userId, @RequestBody SkillDetailsRequestDto requestDto){
         service.addSkillToUser(userId, requestDto);
         return ResponseEntity.status(HttpStatus.CREATED).build();

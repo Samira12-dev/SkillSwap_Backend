@@ -18,7 +18,7 @@ public class ReviewController {
     private  final ReviewService service;
 
     @PreAuthorize("hasRole('USER')")
-    @PostMapping("{userId}")
+    @PostMapping("/{userId}")
     public ReviewResponseDto createReview(@PathVariable Long userId,@Valid @RequestBody  ReviewRequestDto dto){
         return service.createReview(dto,userId);
     }

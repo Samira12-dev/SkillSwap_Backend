@@ -24,8 +24,8 @@ public class NotificationController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/{id}")
-    public NotificationResponseDto getNotificationById(@PathVariable Long id){
-        return service.getNotificationById(id);
+    public NotificationResponseDto getNotificationById(@PathVariable Long id,@RequestParam Long userId){
+        return service.getNotificationById(id,userId);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -41,7 +41,7 @@ public class NotificationController {
 
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{notificationId}/read")
-    public NotificationResponseDto markAsRead(@PathVariable Long notificationId){
-        return service.markAsRead(notificationId);
+    public NotificationResponseDto markAsRead(@PathVariable Long notificationId,@RequestParam Long userId){
+        return service.markAsRead(notificationId,userId);
     }
 }

@@ -32,7 +32,7 @@ public class SwapRequestController {
         return service.getSwapRequestById(swapId);
     }
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<SwapRequestResponseDto>> getAllSwapRequests(){
         return  ResponseEntity.ok(service.getAllSwapRequests());

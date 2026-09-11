@@ -17,9 +17,8 @@ public class DashboardController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/user/{userId}")
-    public DashboardResponseDto getUserDashboard(Authentication authentication) {
-     String email = authentication.getName();
-        return service.getUserDashboard(email);
+    public DashboardResponseDto getUserDashboard(@PathVariable Long userId) {
+        return service.getUserDashboard(userId);
     }
     
     @PreAuthorize("hasRole('ADMIN')")
