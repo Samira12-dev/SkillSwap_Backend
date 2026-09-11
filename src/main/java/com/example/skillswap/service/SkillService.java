@@ -32,6 +32,7 @@ public class SkillService {
     private final SkillDetailsRepo detailsRepo;
     private final SkillDetailsMapper detailsMapper;
     private final SwapRequestRepo swapRequestRepo;
+
     @Transactional
     public SkillResponseDto createSkill(SkillRequestDto requestDto){
     if(repo.existsByName(requestDto.getName())){
@@ -66,7 +67,7 @@ public class SkillService {
 
     @Transactional
     public void deleteSkill(Long id){
-        
+
         if (detailsRepo.existsBySkillId(id)) {
             throw new RuntimeException("Skill is used by users");
         }
