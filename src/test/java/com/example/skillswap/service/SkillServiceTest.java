@@ -15,8 +15,10 @@ import com.example.skillswap.repository.SkillDetailsRepo;
 import com.example.skillswap.repository.SkillRepo;
 import com.example.skillswap.repository.UserRepo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
@@ -24,7 +26,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class SkillServiceTest {
+
       @Mock
       private SkillRepo skillRepo;
 
@@ -98,5 +102,5 @@ class SkillServiceTest {
         service.addSkillToUser(1l,detailsRequestDto,currentUSer);
             verify(detailsRepo).save(any(SkillDetails.class));
     }
-    
+
 }

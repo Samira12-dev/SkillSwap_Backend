@@ -75,7 +75,7 @@ public class SessionService {
         if(session.getStatus() != SessionStatus.PROPOSED){
             throw new RuntimeException("Session can't be accpeted");
         }
-         SwapRequest swapRequest =session.getConversation().getSwapRequest();
+         SwapRequest swapRequest = session.getConversation().getSwapRequest();
         if(!swapRequest.getReceiver().getId().equals(userId)){
             throw  new RuntimeException("You are not allowed to accept this");
         }
