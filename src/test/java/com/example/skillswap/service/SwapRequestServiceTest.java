@@ -36,7 +36,8 @@ class SwapRequestServiceTest {
     private UserRepo userRepo;
     @Mock
     private SkillDetailsRepo detailsRepo;
-
+    @Mock
+    private NotificationService notificationService;
     @InjectMocks
     private  SwapRequestService service;
 

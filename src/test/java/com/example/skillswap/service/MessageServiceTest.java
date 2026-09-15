@@ -23,24 +23,35 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-@ExtendWith(MockitoExtension.class)
 
+
+
+@ExtendWith(MockitoExtension.class)
 class MessageServiceTest {
+
     @Mock
     private MessageRepo messageRepo;
+
     @Mock
-    private  MessageMapper mapper;
+    private MessageMapper mapper;
+
     @Mock
-    private   ConversationRepo conversationRepo;
+    private ConversationRepo conversationRepo;
+
     @Mock
-    private  UserRepo userRepo;
+    private UserRepo userRepo;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private MessageService service;
+
     @Test
     void createMessage() {
         User sender = new User();
         sender.setId(1L);
+
         User reciever = new User();
         reciever.setId(2L);
 
@@ -54,6 +65,7 @@ class MessageServiceTest {
 
         MessageRequestDto requestDto = new MessageRequestDto();
         requestDto.setContent("Salam");
+
         Message message = new Message();
         message.setId(20L);
 
@@ -65,11 +77,12 @@ class MessageServiceTest {
         when(messageRepo.save(any(Message.class))).thenReturn(message);
         when(mapper.toResponse(message)).thenReturn(responseDto);
 
-        MessageResponseDto rsult= service.createMessage(requestDto,10L,1L);
-        assertEquals(responseDto, rsult);
+        MessageResponseDto result =
+                service.createMessage(requestDto, 10L, 1L);
 
-
+        assertEquals(responseDto, result);
     }
+
     @Test
     void markAsRead() {
 

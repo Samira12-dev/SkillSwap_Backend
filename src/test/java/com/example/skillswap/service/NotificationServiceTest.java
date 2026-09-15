@@ -29,6 +29,8 @@ private NotificationRepo repo;
 private NotificationMapper mapper;
 @Mock
 private UserRepo userRepo;
+    @Mock
+    private NotificationService notificationService;
 
 @InjectMocks
 private NotificationService service;
