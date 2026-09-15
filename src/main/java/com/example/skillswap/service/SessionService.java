@@ -114,5 +114,16 @@ public class SessionService {
        return mapper.toResponse(saved);
      }
 
+    @Transactional
+    public Page<SessionResponseDto> getMySessions(Long userId, Pageable pageable) {
+        return sessionRepo
+                .findByConversationSwapRequestSenderIdOrConversationSwapRequestReceiverId(
+                        userId,
+                        userId,
+                        pageable
+                )
+                .map(mapper::toResponse);
+    }
+
 
 }

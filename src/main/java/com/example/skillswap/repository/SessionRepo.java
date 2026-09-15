@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SessionRepo extends JpaRepository<Session,Long> {
     Page<Session> findByConversationSwapRequestId(Long swapId, Pageable pageable);
+    Page<Session> findByConversationSwapRequestSenderIdOrConversationSwapRequestReceiverId(Long senderId, Long receiverId, Pageable pageable
+    );
 }

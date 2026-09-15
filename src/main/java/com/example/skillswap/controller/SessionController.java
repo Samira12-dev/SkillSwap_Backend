@@ -68,4 +68,14 @@ public class SessionController {
     public SessionResponseDto completeSession( @PathVariable Long sessionId,@PathVariable Long userId){
         return service.completeSession(sessionId,userId);
     }
+
+    @Operation(summary = "Get my sessions")
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/my")
+    public ResponseEntity<Page<SessionResponseDto>> getMySessions(
+            @RequestParam Long userId,
+            @PageableDefault(page = 0, size = 10) Pageable pageable
+    ) {
+        return ResponseEntity.ok(service.getMySessions(userId, pageable));
+    }
 }
