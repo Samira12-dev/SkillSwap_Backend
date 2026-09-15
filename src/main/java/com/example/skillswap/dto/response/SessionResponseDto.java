@@ -20,4 +20,5 @@ public class SessionResponseDto {
     private SessionMode mode;
     private SessionStatus status;
     private Long conversationId;
+    private String meetingUrl;
 }

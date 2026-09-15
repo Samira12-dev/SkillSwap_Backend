@@ -5,6 +5,7 @@ import com.example.skillswap.dto.response.SwapRequestResponseDto;
 import com.example.skillswap.entity.Skill;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.enums.NotificationType;
 import com.example.skillswap.enums.SwapStatus;
 import com.example.skillswap.mapper.SwapRequestMapper;
 import com.example.skillswap.repository.SkillDetailsRepo;
@@ -25,6 +26,7 @@ public class SwapRequestService {
     private final UserRepo userRepo;
     private  final SkillRepo skillRepo;
     private final SkillDetailsRepo detailsRepo;
+    private  final NotificationService notificationService;
     @Transactional
     public SwapRequestResponseDto createSwapRequest(Long senderId, SwapRequestRequestDto requestDto){
         User sender= userRepo.findById(senderId).orElseThrow(()->new RuntimeException("Sender not found"));
@@ -48,6 +50,11 @@ public class SwapRequestService {
         swapRequest.setSkillWanted(skillWanted);
         swapRequest.setMessage(requestDto.getMessage());
         SwapRequest savedSwap =repo.save(swapRequest);
+        notificationService.createNotification(
+                swapRequest.getReceiver().getId(),
+                swapRequest.getSender().getFirstName() + " sent you a new swap request",
+                NotificationType.NEW_SWAP_REQUEST
+        );
         return mapper.toResponse(savedSwap);
     }
 
@@ -85,6 +92,9 @@ public class SwapRequestService {
         }
         swapRequest.setSwapStatus(SwapStatus.ACCEPTED);
         SwapRequest savedRequest = repo.save(swapRequest);
+        notificationService.createNotification( swapRequest.getSender().getId(),
+                swapRequest.getReceiver().getFirstName() + " accepted your swap request",
+                NotificationType.REQUEST_ACCEPTED );
         return mapper.toResponse(savedRequest);
     }
     @Transactional
@@ -99,6 +109,9 @@ public class SwapRequestService {
         }
         swapRequest.setSwapStatus(SwapStatus.REJECTED);
         SwapRequest saved = repo.save(swapRequest);
+        notificationService.createNotification( swapRequest.getSender().getId(),
+                swapRequest.getReceiver().getFirstName() + " rejected your swap request",
+                NotificationType.REQUEST_REJECTED );
         return mapper.toResponse(saved);
     }
 

@@ -45,4 +45,10 @@ public class NotificationController {
     public NotificationResponseDto markAsRead(@PathVariable Long notificationId,@RequestParam Long userId){
         return service.markAsRead(notificationId,userId);
     }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/user/{userId}/unread-count")
+    public ResponseEntity<Long> getUnreadCount( @PathVariable Long userId) {
+        return ResponseEntity.ok( service.getUnreadCount(userId) );
+    }
 }

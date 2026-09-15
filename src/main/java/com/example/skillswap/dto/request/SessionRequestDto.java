@@ -24,4 +24,5 @@ public class SessionRequestDto {
     private SessionMode mode;
     @NotNull(message = "Conversation ID is required")
     private Long conversationId;
+    private String meetingUrl;
 }

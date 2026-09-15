@@ -65,4 +65,11 @@ public class NotificationService {
         return mapper.toResponse(saved);
     }
 
+    @Transactional
+    public long getUnreadCount(Long userId) {
+        return repo.countByUserIdAndIsReadFalse(userId);
+    }
+
+
+
 }

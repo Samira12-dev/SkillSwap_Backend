@@ -6,6 +6,7 @@ import com.example.skillswap.entity.Conversation;
 import com.example.skillswap.entity.Message;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.enums.NotificationType;
 import com.example.skillswap.mapper.MessageMapper;
 import com.example.skillswap.repository.ConversationRepo;
 import com.example.skillswap.repository.MessageRepo;
@@ -24,6 +25,7 @@ public class MessageService {
     private final MessageMapper mapper;
     private  final ConversationRepo conversationRepo;
     private final UserRepo userRepo;
+    private final NotificationService notificationService;
 
     @Transactional
     public MessageResponseDto createMessage(MessageRequestDto messageRequestDto,Long conversationID,Long userId){
@@ -41,6 +43,18 @@ public class MessageService {
         message.setConversation(conversation);
 
         Message saved= messageRepo.save(message);
+        Long receiverId;
+
+        if (swap.getSender().getId().equals(userId)) {
+            receiverId = swap.getReceiver().getId();
+        } else {
+            receiverId = swap.getSender().getId();
+        }
+        notificationService.createNotification(
+                receiverId,
+                sender.getFirstName() + " sent you a new message",
+                NotificationType.NEW_MESSAGE
+        );
         return  mapper.toResponse(saved);
     }
     @Transactional
