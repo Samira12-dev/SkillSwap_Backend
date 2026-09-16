@@ -16,4 +16,5 @@ public interface SkillDetailsRepo extends JpaRepository<SkillDetails,Long> {
     boolean existsByUserIdAndSkillId(Long userId, Long skillId);
     boolean existsByUserIdAndSkillIdAndType(Long userId, Long skillId, SkillType type);
     boolean existsBySkillId(Long skillId);
+
 }

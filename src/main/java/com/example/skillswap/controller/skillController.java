@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/skills")
 public class skillController {
@@ -74,6 +76,12 @@ public class skillController {
     @GetMapping("/users/{userId}/skills")
     public ResponseEntity<Page<SkillDetailsResponseDto>>getUserSkills(@PathVariable Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable,@AuthenticationPrincipal User currentUser){
         return ResponseEntity.ok(service.getUserSkills(userId, pageable,currentUser));
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/discover")
+    public ResponseEntity<List<SkillDetailsResponseDto>> discoverSkills() {
+        return ResponseEntity.ok(service.getAllSkillDetails());
     }
 
 }

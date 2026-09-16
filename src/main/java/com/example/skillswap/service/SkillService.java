@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SkillService {
@@ -112,6 +114,14 @@ public class SkillService {
             throw new RuntimeException("Not your account");
         }
        return detailsRepo.findByUserId(userId, pageable).map(detailsMapper::toResponse);
+    }
+
+    @Transactional
+    public List<SkillDetailsResponseDto> getAllSkillDetails() {
+        return detailsRepo.findAll()
+                .stream()
+                .map(detailsMapper::toResponse)
+                .toList();
     }
 
 }
