@@ -80,8 +80,20 @@ public class skillController {
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/discover")
-    public ResponseEntity<List<SkillDetailsResponseDto>> discoverSkills() {
-        return ResponseEntity.ok(service.getAllSkillDetails());
+    public ResponseEntity<Page<SkillDetailsResponseDto>> discoverSkills(
+            @PageableDefault(page = 0, size = 12) Pageable pageable) {
+        return ResponseEntity.ok(service.getAllSkillDetails(pageable));
+    }
+    
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/users/{userId}/profile-skills")
+    public ResponseEntity<Page<SkillDetailsResponseDto>> getUserProfileSkills(
+            @PathVariable Long userId,
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+
+        return ResponseEntity.ok(
+                service.getUserProfileSkills(userId, pageable)
+        );
     }
 
 }

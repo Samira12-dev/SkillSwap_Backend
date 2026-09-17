@@ -117,11 +117,18 @@ public class SkillService {
     }
 
     @Transactional
-    public List<SkillDetailsResponseDto> getAllSkillDetails() {
-        return detailsRepo.findAll()
-                .stream()
-                .map(detailsMapper::toResponse)
-                .toList();
+    public Page<SkillDetailsResponseDto> getAllSkillDetails(Pageable pageable) {
+        return detailsRepo.findAll(pageable)
+                .map(detailsMapper::toResponse);
+    }
+
+    @Transactional
+    public Page<SkillDetailsResponseDto> getUserProfileSkills(
+            Long userId,
+            Pageable pageable) {
+
+        return detailsRepo.findByUserId(userId, pageable)
+                .map(detailsMapper::toResponse);
     }
 
 }
