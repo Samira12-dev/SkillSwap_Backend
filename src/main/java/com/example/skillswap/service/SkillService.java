@@ -100,6 +100,19 @@ public class SkillService {
     }
 
     @Transactional
+    public SkillDetailsResponseDto updateSkillDetails(Long userId, Long skillId, SkillDetailsRequestDto requestDto, User currentUser){
+        if (currentUser.getRole() != Role.ADMIN && !currentUser.getId().equals(userId)) {
+            throw new AccessDeniedException("Not your account");
+        }
+        SkillDetails skillDetails = detailsRepo.findByUserIdAndSkillId(userId, skillId)
+                .orElseThrow(() -> new RuntimeException("Skill not found for this user"));
+        skillDetails.setType(requestDto.getType());
+        skillDetails.setLevel(requestDto.getLevel());
+        SkillDetails updated = detailsRepo.save(skillDetails);
+        return detailsMapper.toResponse(updated);
+    }
+
+    @Transactional
     public void removeSkillFromUser(Long userId,Long skillId,User currentUser){
         if (currentUser.getRole() != Role.ADMIN && !currentUser.getId().equals(userId)) {
             throw new AccessDeniedException("Not your account");

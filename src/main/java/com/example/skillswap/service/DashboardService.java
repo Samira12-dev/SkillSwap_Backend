@@ -26,7 +26,6 @@ public class DashboardService {
 
     public DashboardResponseDto getUserDashboard(Long userId){
 
-
         int pendingRequest = swapRequestRepo.findByReceiverIdAndSwapStatus(userId, SwapStatus.PENDING).size();
 
                 List<SwapRequest>sentRequest=swapRequestRepo.findBySenderId(userId, Pageable.unpaged()).getContent();

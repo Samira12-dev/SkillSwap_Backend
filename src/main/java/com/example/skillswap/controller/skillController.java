@@ -16,14 +16,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/skills")
-public class skillController {
+public class SkillController {
     private final SkillService service;
 
-    public skillController(SkillService service) {
+    public SkillController(SkillService service) {
         this.service = service;
     }
 
@@ -41,15 +39,15 @@ public class skillController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping
-    public ResponseEntity<Page< SkillResponseDto>>getAll(
+    public ResponseEntity<Page<SkillResponseDto>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(service.findAll(page,size)) ;
+        return ResponseEntity.ok(service.findAll(page, size));
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{id}")
-    public ResponseEntity<SkillResponseDto>getSkillById(@PathVariable Long id){
+    public ResponseEntity<SkillResponseDto> getSkillById(@PathVariable Long id){
         return ResponseEntity.ok(service.findSkillById(id));
     }
 
@@ -61,21 +59,27 @@ public class skillController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PostMapping("/users/{userId}/skill")
-    public ResponseEntity<SkillDetailsResponseDto>addSkillToUser(@PathVariable Long userId, @RequestBody SkillDetailsRequestDto requestDto,@AuthenticationPrincipal User currentUser){
-        service.addSkillToUser(userId, requestDto,currentUser);
+    public ResponseEntity<SkillDetailsResponseDto> addSkillToUser(@PathVariable Long userId, @Valid @RequestBody SkillDetailsRequestDto requestDto, @AuthenticationPrincipal User currentUser){
+        service.addSkillToUser(userId, requestDto, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PutMapping("/users/{userId}/skills/{skillId}")
+    public ResponseEntity<SkillDetailsResponseDto> updateUserSkill(@PathVariable Long userId, @PathVariable Long skillId, @Valid @RequestBody SkillDetailsRequestDto requestDto, @AuthenticationPrincipal User currentUser){
+        return ResponseEntity.ok(service.updateSkillDetails(userId, skillId, requestDto, currentUser));
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @DeleteMapping("/users/{userId}/skills/{skillId}")
-    public void removeSkillFromUser(@PathVariable Long userId,@PathVariable Long skillId,@AuthenticationPrincipal User currentUser){
-        service.removeSkillFromUser(userId,skillId,currentUser);
+    public void removeSkillFromUser(@PathVariable Long userId, @PathVariable Long skillId, @AuthenticationPrincipal User currentUser){
+        service.removeSkillFromUser(userId, skillId, currentUser);
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/users/{userId}/skills")
-    public ResponseEntity<Page<SkillDetailsResponseDto>>getUserSkills(@PathVariable Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable,@AuthenticationPrincipal User currentUser){
-        return ResponseEntity.ok(service.getUserSkills(userId, pageable,currentUser));
+    public ResponseEntity<Page<SkillDetailsResponseDto>> getUserSkills(@PathVariable Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable, @AuthenticationPrincipal User currentUser){
+        return ResponseEntity.ok(service.getUserSkills(userId, pageable, currentUser));
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -84,7 +88,7 @@ public class skillController {
             @PageableDefault(page = 0, size = 12) Pageable pageable) {
         return ResponseEntity.ok(service.getAllSkillDetails(pageable));
     }
-    
+
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/users/{userId}/profile-skills")
     public ResponseEntity<Page<SkillDetailsResponseDto>> getUserProfileSkills(

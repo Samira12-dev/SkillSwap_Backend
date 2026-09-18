@@ -10,6 +10,9 @@ import com.example.skillswap.entity.SkillDetails;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
 import com.example.skillswap.enums.Role;
+import com.example.skillswap.enums.SkillLevel;
+import com.example.skillswap.enums.SkillType;
+import com.example.skillswap.mapper.SkillDetailsMapper;
 import com.example.skillswap.mapper.SkillMapper;
 import com.example.skillswap.repository.SkillDetailsRepo;
 import com.example.skillswap.repository.SkillRepo;
@@ -36,6 +39,8 @@ class SkillServiceTest {
       private SkillMapper skillMapper;
       @Mock
       private SkillDetailsRepo detailsRepo;
+      @Mock
+      private SkillDetailsMapper detailsMapper;
       @Mock
       private UserRepo userRepo;
       @InjectMocks
@@ -101,6 +106,49 @@ class SkillServiceTest {
 
         service.addSkillToUser(1l,detailsRequestDto,currentUSer);
             verify(detailsRepo).save(any(SkillDetails.class));
+    }
+
+    @Test
+    void updateSkillDetails() {
+        SkillDetailsRequestDto requestDto = new SkillDetailsRequestDto();
+        requestDto.setSkillId(5L);
+        requestDto.setType(SkillType.OFFER);
+        requestDto.setLevel(SkillLevel.ADVANCED);
+
+        SkillDetails skillDetails = new SkillDetails();
+        skillDetails.setId(10L);
+
+        User currentUser = new User();
+        currentUser.setId(1L);
+        currentUser.setRole(Role.USER);
+
+        when(detailsRepo.findByUserIdAndSkillId(1L, 5L)).thenReturn(Optional.of(skillDetails));
+        when(detailsRepo.save(skillDetails)).thenReturn(skillDetails);
+
+        SkillDetailsResponseDto responseDto = new SkillDetailsResponseDto();
+        when(detailsMapper.toResponse(skillDetails)).thenReturn(responseDto);
+
+        SkillDetailsResponseDto result = service.updateSkillDetails(1L, 5L, requestDto, currentUser);
+
+        assertEquals(responseDto, result);
+        assertEquals(SkillType.OFFER, skillDetails.getType());
+        assertEquals(SkillLevel.ADVANCED, skillDetails.getLevel());
+    }
+
+    @Test
+    void removeSkillFromUser() {
+        SkillDetails skillDetails = new SkillDetails();
+        skillDetails.setId(2L);
+
+        User currentUser = new User();
+        currentUser.setId(1L);
+        currentUser.setRole(Role.USER);
+
+        when(detailsRepo.findByUserIdAndSkillId(1L, 5L)).thenReturn(Optional.of(skillDetails));
+
+        service.removeSkillFromUser(1L, 5L, currentUser);
+
+        verify(detailsRepo).delete(skillDetails);
     }
 
 }

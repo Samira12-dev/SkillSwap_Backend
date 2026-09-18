@@ -42,7 +42,7 @@ public class JwtUtils {
                 .claim("photo", user.getPhoto())
                 .claim("bio",user.getBio())
                 .claim("rating",user.getRating())
-                .claim("createdAt",user.getCreatedAt())
+                .claim("createdAt",user.getCreatedAt().toString())
                 .setIssuedAt(new Date())
                 .setExpiration(
                         new Date(System.currentTimeMillis() + jwtExpiration)

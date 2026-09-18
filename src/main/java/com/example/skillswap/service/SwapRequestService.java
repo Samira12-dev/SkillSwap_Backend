@@ -1,6 +1,7 @@
 package com.example.skillswap.service;
 
 import com.example.skillswap.dto.request.SwapRequestRequestDto;
+import com.example.skillswap.dto.response.ConversationResponseDto;
 import com.example.skillswap.dto.response.SwapRequestResponseDto;
 import com.example.skillswap.entity.Skill;
 import com.example.skillswap.entity.SwapRequest;
@@ -27,6 +28,7 @@ public class SwapRequestService {
     private  final SkillRepo skillRepo;
     private final SkillDetailsRepo detailsRepo;
     private  final NotificationService notificationService;
+    private final ConversationService conversationService;
     @Transactional
     public SwapRequestResponseDto createSwapRequest(Long senderId, SwapRequestRequestDto requestDto){
         User sender= userRepo.findById(senderId).orElseThrow(()->new RuntimeException("Sender not found"));
@@ -80,22 +82,32 @@ public class SwapRequestService {
     }
 
     @Transactional
-    public SwapRequestResponseDto acceptSwapRequest(Long swapId,Long userId ){
-        SwapRequest swapRequest= repo.findById(swapId)
+    public SwapRequestResponseDto acceptSwapRequest(Long swapId, Long userId) {
+        SwapRequest swapRequest = repo.findById(swapId)
                 .orElseThrow(() -> new RuntimeException("Swap request not found"));
-        if(!swapRequest.getReceiver().getId().equals(userId)){
+
+        if (!swapRequest.getReceiver().getId().equals(userId)) {
             throw new RuntimeException("You are not allowed to accept this request");
         }
 
-        if(swapRequest.getSwapStatus()!= SwapStatus.PENDING){
-            throw  new RuntimeException("swap is not pending");
+        if (swapRequest.getSwapStatus() != SwapStatus.PENDING) {
+            throw new RuntimeException("swap is not pending");
         }
+
         swapRequest.setSwapStatus(SwapStatus.ACCEPTED);
         SwapRequest savedRequest = repo.save(swapRequest);
-        notificationService.createNotification( swapRequest.getSender().getId(),
+
+        ConversationResponseDto conversation = conversationService.createCoersation(savedRequest.getId(), userId);
+
+        notificationService.createNotification(
+                swapRequest.getSender().getId(),
                 swapRequest.getReceiver().getFirstName() + " accepted your swap request",
-                NotificationType.REQUEST_ACCEPTED );
-        return mapper.toResponse(savedRequest);
+                NotificationType.REQUEST_ACCEPTED
+        );
+        SwapRequestResponseDto response = mapper.toResponse(savedRequest);
+        response.setConversationId(conversation.getId());
+
+        return response;
     }
     @Transactional
     public SwapRequestResponseDto rejectSwapRequest(Long swapId,Long userI){

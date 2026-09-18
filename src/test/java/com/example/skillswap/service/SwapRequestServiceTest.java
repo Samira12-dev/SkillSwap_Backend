@@ -1,6 +1,7 @@
 package com.example.skillswap.service;
 
 import com.example.skillswap.dto.request.SwapRequestRequestDto;
+import com.example.skillswap.dto.response.ConversationResponseDto;
 import com.example.skillswap.dto.response.SwapRequestResponseDto;
 import com.example.skillswap.entity.Skill;
 import com.example.skillswap.entity.SwapRequest;
@@ -38,6 +39,8 @@ class SwapRequestServiceTest {
     private SkillDetailsRepo detailsRepo;
     @Mock
     private NotificationService notificationService;
+    @Mock
+    private ConversationService conversationService;
     @InjectMocks
     private  SwapRequestService service;
 
@@ -97,9 +100,13 @@ class SwapRequestServiceTest {
 
         SwapRequestResponseDto responseDto = new SwapRequestResponseDto();
 
+        ConversationResponseDto conversationResponseDto = new ConversationResponseDto();
+        conversationResponseDto.setId(500L);
+
         when(swapRequestRepo.findById(100L)).thenReturn(Optional.of(swapRequest1));
 
         when(swapRequestRepo.save(swapRequest1)).thenReturn(swapRequest1);
+        when(conversationService.createCoersation(100L, 2L)).thenReturn(conversationResponseDto);
         when(mapper.toResponse(swapRequest1)).thenReturn(responseDto);
 
         SwapRequestResponseDto result= service.acceptSwapRequest(100L,2L);
