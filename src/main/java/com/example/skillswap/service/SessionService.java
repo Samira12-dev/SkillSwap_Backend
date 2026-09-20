@@ -158,4 +158,10 @@ public class SessionService {
                 )
                 .map(mapper::toResponse);
     }
+
+    @Transactional
+    public Page<SessionResponseDto> getAllSessions(Pageable pageable) {
+        return sessionRepo.findAll(pageable)
+                .map(mapper::toResponse);
+    }
 }

@@ -78,4 +78,17 @@ public class SessionController {
     ) {
         return ResponseEntity.ok(service.getMySessions(userId, pageable));
     }
+
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<Page<SessionResponseDto>> getAllSessions(
+            @PageableDefault(page = 0, size = 10) Pageable pageable) {
+
+        return ResponseEntity.ok(service.getAllSessions(pageable));
+    }
+
+
+
+
 }

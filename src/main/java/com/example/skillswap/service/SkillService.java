@@ -144,4 +144,5 @@ public class SkillService {
                 .map(detailsMapper::toResponse);
     }
 
+    
 }
