@@ -1,52 +1,68 @@
-services:
 
-  mysql:
-    image: mysql:8.0
-    container_name: skillswap-mysql
+  services:
 
-    environment:
-      MYSQL_ROOT_PASSWORD: Samira12
-      MYSQL_DATABASE: skillswap_db
+    mysql:
+      image: mysql:8.0
+      container_name: skillswap-mysql
 
-    ports:
-      - "3310:3306"
+      environment:
+        MYSQL_ROOT_PASSWORD: Samira12
+        MYSQL_DATABASE: skillswap_db
 
-    volumes:
-      - skillswap-db-data:/var/lib/mysql
+      ports:
+        - "3310:3306"
 
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pSamira12"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      volumes:
+        - skillswap-db-data:/var/lib/mysql
 
-    networks:
-      - skillswap-network
+      healthcheck:
+        test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pSamira12"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
 
-
-  app:
-    build: .
-    container_name: skillswap-app
-
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/skillswap_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: Samira12
-
-    ports:
-      - "8080:8080"
-
-    networks:
-      - skillswap-network
+      networks:
+        - skillswap-network
 
 
-volumes:
-  skillswap-db-data:
+    app:
+      build: .
+      container_name: skillswap-app
+
+      depends_on:
+        mysql:
+          condition: service_healthy
+
+      environment:
+        SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/skillswap_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+        SPRING_DATASOURCE_USERNAME: root
+        SPRING_DATASOURCE_PASSWORD: Samira12
+
+      ports:
+        - "8080:8080"
+
+      networks:
+        - skillswap-network
 
 
-networks:
-  skillswap-network:
+    frontend:
+      build: ../skillswap_frontend
+      container_name: skillswap-frontend
+
+      depends_on:
+        - app
+
+      ports:
+        - "5173:5173"
+
+      networks:
+        - skillswap-network
+
+
+  volumes:
+    skillswap-db-data:
+
+
+  networks:
+    skillswap-network:
+
