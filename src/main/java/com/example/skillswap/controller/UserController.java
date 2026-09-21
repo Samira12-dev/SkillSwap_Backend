@@ -33,7 +33,7 @@ public class UserController {
     }
 
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PutMapping("/{userId}")
     public UserResponseDTO updateProfile(@PathVariable Long userId, @Valid @RequestBody UpdateProfileRequestDTO dto, Authentication authentication){
         return service.updateProfile(userId,authentication.getName(),dto);
