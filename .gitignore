@@ -37,3 +37,5 @@ tokens/
 
 # Spring Boot configuration with secrets
 src/main/resources/application.properties
+
+.env
