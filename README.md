@@ -624,8 +624,8 @@ skillswap_backend/
 
 Le diagramme présente les principales interactions entre les utilisateurs, l'administrateur et le système.
 
-![Use Case Diagram](docs/uml/![use_case.PNG](use_case.PNG))
-
+![Use Case Diagram](docs/uml/)
+![use_case.PNG](use_case.PNG)
 ### Diagramme de classes
 
 Le diagramme présente les principales entités du backend et leurs relations.
@@ -670,7 +670,7 @@ Réalisation de la session
 Avis
 ```
 
-![Sequence Diagram](docs/uml/![sequence.PNG](sequence.PNG))
+![Sequence Diagram](docs/uml/)
 
 ---![sequence.PNG](sequence.PNG)
 
