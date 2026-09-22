@@ -672,7 +672,7 @@ Avis
 
 ![Sequence Diagram](docs/uml/![sequence.PNG](sequence.PNG))
 
----
+---![sequence.PNG](sequence.PNG)
 
 ## 15. Difficultés rencontrées
 
