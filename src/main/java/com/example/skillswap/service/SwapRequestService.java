@@ -61,8 +61,12 @@ public class SwapRequestService {
     }
 
     @Transactional
-    public SwapRequestResponseDto getSwapRequestById(Long swapId){
+    public SwapRequestResponseDto getSwapRequestById(Long swapId, Long userId){
         SwapRequest swapRequest =repo.findById(swapId).orElseThrow(()->new RuntimeException("swap request not found"));
+        if (!swapRequest.getSender().getId().equals(userId)
+                && !swapRequest.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this swap request");
+        }
         return mapper.toResponse(swapRequest);
     }
 

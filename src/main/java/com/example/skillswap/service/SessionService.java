@@ -10,6 +10,7 @@ import com.example.skillswap.enums.SessionStatus;
 import com.example.skillswap.mapper.SessionMapper;
 import com.example.skillswap.repository.ConversationRepo;
 import com.example.skillswap.repository.SessionRepo;
+import com.example.skillswap.repository.SwapRequestRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ public class SessionService {
     private final SessionRepo sessionRepo;
     private final SessionMapper mapper;
     private final ConversationRepo conversationRepo;
+    private final SwapRequestRepo swapRequestRepo;
 
     @Transactional
     public SessionResponseDto createSession(SessionRequestDto requestDto, Long userId) {
@@ -67,15 +69,30 @@ public class SessionService {
     }
 
     @Transactional
-    public SessionResponseDto getSessionById(Long sessionId) {
+    public SessionResponseDto getSessionById(Long sessionId, Long userId) {
         Session session = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        SwapRequest swapRequest = session.getConversation().getSwapRequest();
+
+        if (!swapRequest.getSender().getId().equals(userId)
+                && !swapRequest.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this session");
+        }
 
         return mapper.toResponse(session);
     }
 
     @Transactional
-    public Page<SessionResponseDto> getSessionsBySwap(Long swapId, Pageable pageable) {
+    public Page<SessionResponseDto> getSessionsBySwap(Long swapId, Long userId, Pageable pageable) {
+        SwapRequest swapRequest = swapRequestRepo.findById(swapId)
+                .orElseThrow(() -> new RuntimeException("Swap request not found"));
+
+        if (!swapRequest.getSender().getId().equals(userId)
+                && !swapRequest.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this swap");
+        }
+
         return sessionRepo.findByConversationSwapRequestId(swapId, pageable)
                 .map(mapper::toResponse);
     }

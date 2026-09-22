@@ -38,4 +38,11 @@ public class UserController {
     public UserResponseDTO updateProfile(@PathVariable Long userId, @Valid @RequestBody UpdateProfileRequestDTO dto, Authentication authentication){
         return service.updateProfile(userId,authentication.getName(),dto);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId){
+        service.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
 }

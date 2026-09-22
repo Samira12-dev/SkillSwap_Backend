@@ -67,6 +67,10 @@ public class ReviewService {
         review.setReviewee(reviewee);
 
         Review saved= repo.save(review);
+
+        reviewee.setRating(calculateAverageRating(reviewee.getId()));
+        userRepo.save(reviewee);
+
         return mapper.toResponse(saved);
     }
     @Transactional

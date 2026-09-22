@@ -71,6 +71,9 @@ public class ConversationService {
 
     @Transactional
     public ConversationResponseDto getConversationBetweenUsers(Long user1Id, Long user2Id,Long requestUser){
+        if (!requestUser.equals(user1Id) && !requestUser.equals(user2Id)) {
+            throw new RuntimeException("You are not part of this conversation");
+        }
         List<Conversation>conversations =conversationRepo.findAll();
         for (Conversation conversation:conversations){
             SwapRequest swapRequest=conversation.getSwapRequest();
