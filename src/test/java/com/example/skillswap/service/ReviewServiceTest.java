@@ -77,6 +77,8 @@ private ReviewService service;
         when(repo.save(any(Review.class))).thenReturn(review);
         when(mapper.toResponse(review)).thenReturn(responseDto);
 
+        when(repo.findByRevieweeId(2L, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of()));
         ReviewResponseDto result=service.createReview(requestDto,1L);
 
         assertEquals(responseDto,result);
