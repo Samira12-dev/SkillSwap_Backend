@@ -23,7 +23,7 @@ public class MessageController {
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/{conversationid}/user/{userId}")
-    public MessageResponseDto createMessage(@PathVariable Long conversationid,@PathVariable Long userId, @AuthenticationPrincipal User principal, @Valid @RequestBody MessageRequestDto dto){
+    public MessageResponseDto createMessage(@Valid @PathVariable Long conversationid,@PathVariable Long userId, @AuthenticationPrincipal User principal, @Valid @RequestBody MessageRequestDto dto){
         if (!principal.getId().equals(userId)) {
             throw new AccessDeniedException("You can only send messages as yourself");
         }

@@ -8,7 +8,7 @@ services:
     ports:
       - "3310:3306"
     volumes:
-      - skillswap-db-data:/var/lib/mysql
+      - skill swap-db-data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD}"]
       interval: 5s
