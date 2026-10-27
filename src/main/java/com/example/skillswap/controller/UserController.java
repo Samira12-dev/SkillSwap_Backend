@@ -5,12 +5,13 @@ import com.example.skillswap.dto.response.UserResponseDTO;
 import com.example.skillswap.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,14 +28,21 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers(){
-        return ResponseEntity.ok(service.getAllUsers());
+    public ResponseEntity<Page<UserResponseDTO>> getAllUsers(@PageableDefault(page = 0, size = 10) Pageable pageable){
+        return ResponseEntity.ok(service.getAllUsers(pageable));
     }
 
 
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PutMapping("/{userId}")
     public UserResponseDTO updateProfile(@PathVariable Long userId, @Valid @RequestBody UpdateProfileRequestDTO dto, Authentication authentication){
         return service.updateProfile(userId,authentication.getName(),dto);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId){
+        service.deleteUser(userId);
+        return ResponseEntity.noContent().build();
     }
 }

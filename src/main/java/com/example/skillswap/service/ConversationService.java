@@ -9,6 +9,9 @@ import com.example.skillswap.repository.ConversationRepo;
 import com.example.skillswap.repository.SwapRequestRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,10 +25,13 @@ public class ConversationService {
     private final ConversationMapper mapper;
 
     @Transactional
-    public ConversationResponseDto createCoersation( Long swapId){
+    public ConversationResponseDto createCoersation( Long swapId, Long userId){
         SwapRequest swapRequest=swapRequestRepo.findById(swapId).orElseThrow(()->new RuntimeException("swap not found"));
         if(swapRequest.getSwapStatus()!= SwapStatus.ACCEPTED){
             throw  new RuntimeException("Conversation can only created if swap accepted");
+        }
+        if (!swapRequest.getSender().getId().equals(userId) && !swapRequest.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this swap");
         }
         if(conversationRepo.findBySwapRequestId(swapId).isPresent()){
             throw new RuntimeException("Conversation already exists");
@@ -38,21 +44,36 @@ public class ConversationService {
     }
 
     @Transactional
-    public ConversationResponseDto getConversationById(Long id){
+    public ConversationResponseDto getConversationById(Long id, Long userId){
         Conversation conversation=conversationRepo.findById(id).orElseThrow(()->new RuntimeException("Conversation not found"));
+        SwapRequest swapRequest = conversation.getSwapRequest();
+        if (!swapRequest.getSender().getId().equals(userId)
+                && !swapRequest.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this conversation");
+        }
         return mapper.toResponse(conversation);
     }
 
     @Transactional
-    public List<ConversationResponseDto> getMyConversations(Long userId){
-        List<Conversation> conversations = new ArrayList<>();
-        conversations.addAll(conversationRepo.findBySwapRequestSenderId(userId));
-        conversations.addAll(conversationRepo.findBySwapRequestReceiverId(userId));
-        return conversations.stream().map(mapper::toResponse).toList();
+    public Page<ConversationResponseDto> getMyConversations(Long userId, Pageable pageable){
+        List<Conversation> all = new ArrayList<>();
+        all.addAll(conversationRepo.findBySwapRequestSenderId(userId, Pageable.unpaged()).getContent());
+        all.addAll(conversationRepo.findBySwapRequestReceiverId(userId, Pageable.unpaged()).getContent());
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), all.size());
+        if (start >= all.size()) {
+            return new PageImpl<>(List.of(), pageable, all.size());
+        }
+        List<ConversationResponseDto> content = all.subList(start, end).stream()
+                .map(mapper::toResponse).toList();
+        return new PageImpl<>(content, pageable, all.size());
     }
 
     @Transactional
-    public ConversationResponseDto getConversationBetweenUsers(Long user1Id, Long user2Id){
+    public ConversationResponseDto getConversationBetweenUsers(Long user1Id, Long user2Id,Long requestUser){
+        if (!requestUser.equals(user1Id) && !requestUser.equals(user2Id)) {
+            throw new RuntimeException("You are not part of this conversation");
+        }
         List<Conversation>conversations =conversationRepo.findAll();
         for (Conversation conversation:conversations){
             SwapRequest swapRequest=conversation.getSwapRequest();
@@ -60,15 +81,7 @@ public class ConversationService {
             Long receiverId= swapRequest.getReceiver().getId();
 
             if(senderId.equals(user1Id) && receiverId.equals(user2Id) || (senderId.equals(user2Id) && receiverId.equals(user1Id))){
-                return  new ConversationResponseDto(
-                        conversation.getId(),
-                        conversation.getCreatedAt(),
-                        swapRequest.getId(),
-                        senderId,
-                        swapRequest.getSender().getFirstName(),
-                        receiverId,
-                        swapRequest.getReceiver().getFirstName()
-                );
+                return  mapper.toResponse(conversation);
             }
         }
         throw new RuntimeException("Conversation not found");

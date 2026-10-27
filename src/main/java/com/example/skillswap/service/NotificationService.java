@@ -9,9 +9,9 @@ import com.example.skillswap.repository.NotificationRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -35,31 +35,41 @@ public class NotificationService {
     }
 
     @Transactional
-    public NotificationResponseDto getNotificationById(Long Id){
-       Notification notification = repo.findById(Id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public NotificationResponseDto getNotificationById(Long notificationId, Long userId) {
+        Notification notification = repo.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to see this notification");
+        }
         return mapper.toResponse(notification);
     }
 
     @Transactional
-    public List<NotificationResponseDto> getAllNotifications(){
-        return repo.findAll().stream()
-                .map(mapper::toResponse).toList();
+    public Page<NotificationResponseDto> getAllNotifications(Pageable pageable){
+        return repo.findAll(pageable).map(mapper::toResponse);
     }
 
     @Transactional
-    public List<NotificationResponseDto> getNotificationsByUser(Long userId){
-        List<Notification> notifications =repo.findByUserId(userId);
-
-        return notifications.stream().map(mapper::toResponse).toList();
+    public Page<NotificationResponseDto> getNotificationsByUser(Long userId, Pageable pageable){
+        return repo.findByUserId(userId, pageable).map(mapper::toResponse);
     }
     @Transactional
-    public NotificationResponseDto markAsRead(Long notificationId){
+    public NotificationResponseDto markAsRead(Long notificationId, Long userId){
         Notification notification = repo.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
+        if (!notification.getUser().getId().equals(userId)) {
+            throw new RuntimeException("You are not allowed to modify this notification");
+        }
         notification.setRead(true);
         Notification saved = repo.save(notification);
-        return  mapper.toResponse(saved);
+        return mapper.toResponse(saved);
     }
+
+    @Transactional
+    public long getUnreadCount(Long userId) {
+        return repo.countByUserIdAndIsReadFalse(userId);
+    }
+
+
 
 }

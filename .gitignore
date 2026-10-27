@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+src/main/resources/credentials.json
+tokens/
+
+# Spring Boot configuration with secrets
+src/main/resources/application.properties
+
+.env

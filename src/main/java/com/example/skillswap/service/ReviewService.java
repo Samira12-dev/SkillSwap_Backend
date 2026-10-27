@@ -4,6 +4,7 @@ import com.example.skillswap.dto.request.ReviewRequestDto;
 import com.example.skillswap.dto.response.ReviewResponseDto;
 import com.example.skillswap.entity.Review;
 import com.example.skillswap.entity.Session;
+import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
 import com.example.skillswap.enums.SessionStatus;
 import com.example.skillswap.mapper.ReviewMapper;
@@ -12,9 +13,10 @@ import com.example.skillswap.repository.SessionRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -37,32 +39,43 @@ public class ReviewService {
         if(session.getStatus() != SessionStatus.COMPLETED){
             throw  new RuntimeException("A review can only be done if the session has been completed");
         }
+
+        SwapRequest swapRequest = session.getConversation().getSwapRequest();
+        Long senderId = swapRequest.getSender().getId();
+        Long receiverId = swapRequest.getReceiver().getId();
+
+        if (!reviewerId.equals(senderId) && !reviewerId.equals(receiverId)) {
+            throw new RuntimeException("You are not a participant in this session");
+        }
+        if (reviewerId.equals(senderId)) {
+            if (!requestDto.getRevieweeId().equals(receiverId)) {
+                throw new RuntimeException("You can only review the other participant");
+            }
+        }
+
+        if (reviewerId.equals(receiverId)) {
+            if (!requestDto.getRevieweeId().equals(senderId)) {
+                throw new RuntimeException("You can only review the other participant");
+            }
+        }
+
         Review review =new Review();
         review.setRating(requestDto.getRating());
         review.setComment(requestDto.getComment());
         review.setSession(session);
         review.setReviewer(reviewer);
         review.setReviewee(reviewee);
+
         Review saved= repo.save(review);
+
+        reviewee.setRating(calculateAverageRating(reviewee.getId()));
+        userRepo.save(reviewee);
+
         return mapper.toResponse(saved);
     }
     @Transactional
-    public List<ReviewResponseDto> getReviewsByUser(Long userId){
-      List<Review>reviews =repo.findByRevieweeId(userId);
-        List<ReviewResponseDto> result= new ArrayList<>();
-        for (Review review:reviews){
-            result.add(new ReviewResponseDto(
-                    review.getId(),
-                    review.getRating(),
-                    review.getComment(),
-                    review.getReviewer().getId(),
-                    review.getReviewer().getFirstName(),
-                    review.getReviewee().getId(),
-                    review.getReviewee().getFirstName(),
-                    review.getSession().getId()
-            ));
-        }
-        return result;
+    public Page<ReviewResponseDto> getReviewsByUser(Long userId, Pageable pageable){
+        return repo.findByRevieweeId(userId, pageable).map(mapper::toResponse);
     }
     @Transactional
     public ReviewResponseDto getReviewById(Long reviewId){
@@ -71,7 +84,7 @@ public class ReviewService {
     }
     @Transactional
     public  double calculateAverageRating(Long userId){
-        List<Review> reviewList =repo.findByRevieweeId(userId);
+        List<Review> reviewList = repo.findByRevieweeId(userId, Pageable.unpaged()).getContent();
         if(reviewList.isEmpty()){
             return 0;
         }

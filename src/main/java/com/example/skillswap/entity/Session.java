@@ -32,6 +32,7 @@ public class Session {
 
     @Enumerated(EnumType.STRING)
     private SessionStatus status;
+    private String meetingUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", nullable = false)

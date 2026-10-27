@@ -1,10 +1,12 @@
 package com.example.skillswap.service;
 
 import com.example.skillswap.dto.request.SwapRequestRequestDto;
+import com.example.skillswap.dto.response.ConversationResponseDto;
 import com.example.skillswap.dto.response.SwapRequestResponseDto;
 import com.example.skillswap.entity.Skill;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.enums.NotificationType;
 import com.example.skillswap.enums.SwapStatus;
 import com.example.skillswap.mapper.SwapRequestMapper;
 import com.example.skillswap.repository.SkillDetailsRepo;
@@ -13,9 +15,9 @@ import com.example.skillswap.repository.SwapRequestRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,8 @@ public class SwapRequestService {
     private final UserRepo userRepo;
     private  final SkillRepo skillRepo;
     private final SkillDetailsRepo detailsRepo;
+    private  final NotificationService notificationService;
+    private final ConversationService conversationService;
     @Transactional
     public SwapRequestResponseDto createSwapRequest(Long senderId, SwapRequestRequestDto requestDto){
         User sender= userRepo.findById(senderId).orElseThrow(()->new RuntimeException("Sender not found"));
@@ -48,50 +52,66 @@ public class SwapRequestService {
         swapRequest.setSkillWanted(skillWanted);
         swapRequest.setMessage(requestDto.getMessage());
         SwapRequest savedSwap =repo.save(swapRequest);
+        notificationService.createNotification(
+                swapRequest.getReceiver().getId(),
+                swapRequest.getSender().getFirstName() + " sent you a new swap request",
+                NotificationType.NEW_SWAP_REQUEST
+        );
         return mapper.toResponse(savedSwap);
     }
 
     @Transactional
-    public SwapRequestResponseDto getSwapRequestById(Long swapId){
+    public SwapRequestResponseDto getSwapRequestById(Long swapId, Long userId){
         SwapRequest swapRequest =repo.findById(swapId).orElseThrow(()->new RuntimeException("swap request not found"));
+        if (!swapRequest.getSender().getId().equals(userId)
+                && !swapRequest.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this swap request");
+        }
         return mapper.toResponse(swapRequest);
     }
 
     @Transactional
-    public List<SwapRequestResponseDto> getAllSwapRequests(){
-        return repo.findAll().stream()
-                .map(mapper::toResponse).toList();
+    public Page<SwapRequestResponseDto> getAllSwapRequests(Pageable pageable){
+        return repo.findAll(pageable).map(mapper::toResponse);
     }
 
     @Transactional
-    public List<SwapRequestResponseDto>getReceivedRequests(Long userId){
-        List<SwapRequest> listOfRequestReceived =repo.findByReceiverId(userId);
-        return listOfRequestReceived.stream()
-                .map(mapper::toResponse).toList();
-
+    public Page<SwapRequestResponseDto>getReceivedRequests(Long userId, Pageable pageable){
+        return repo.findByReceiverId(userId, pageable).map(mapper::toResponse);
     }
 
     @Transactional
-    public List<SwapRequestResponseDto>getSentRequests(Long userId){
-        List<SwapRequest> listOfRequestSender = repo.findBySenderId(userId);
-        return listOfRequestSender.stream()
-                .map(mapper::toResponse).toList();
+    public Page<SwapRequestResponseDto>getSentRequests(Long userId, Pageable pageable){
+        return repo.findBySenderId(userId, pageable).map(mapper::toResponse);
     }
 
     @Transactional
-    public SwapRequestResponseDto acceptSwapRequest(Long swapId,Long userId ){
-        SwapRequest swapRequest= repo.findById(swapId)
+    public SwapRequestResponseDto acceptSwapRequest(Long swapId, Long userId) {
+        SwapRequest swapRequest = repo.findById(swapId)
                 .orElseThrow(() -> new RuntimeException("Swap request not found"));
-        if(!swapRequest.getReceiver().getId().equals(userId)){
+
+        if (!swapRequest.getReceiver().getId().equals(userId)) {
             throw new RuntimeException("You are not allowed to accept this request");
         }
 
-        if(swapRequest.getSwapStatus()!= SwapStatus.PENDING){
-            throw  new RuntimeException("swap is not pending");
+        if (swapRequest.getSwapStatus() != SwapStatus.PENDING) {
+            throw new RuntimeException("swap is not pending");
         }
+
         swapRequest.setSwapStatus(SwapStatus.ACCEPTED);
         SwapRequest savedRequest = repo.save(swapRequest);
-        return mapper.toResponse(savedRequest);
+
+        ConversationResponseDto conversation = conversationService.createCoersation(savedRequest.getId(), userId);
+
+        notificationService.createNotification(
+                swapRequest.getSender().getId(),
+                swapRequest.getReceiver().getFirstName() + " accepted your swap request",
+                NotificationType.REQUEST_ACCEPTED
+        );
+        SwapRequestResponseDto response = mapper.toResponse(savedRequest);
+        response.setConversationId(conversation.getId());
+
+        return response;
     }
     @Transactional
     public SwapRequestResponseDto rejectSwapRequest(Long swapId,Long userI){
@@ -105,6 +125,9 @@ public class SwapRequestService {
         }
         swapRequest.setSwapStatus(SwapStatus.REJECTED);
         SwapRequest saved = repo.save(swapRequest);
+        notificationService.createNotification( swapRequest.getSender().getId(),
+                swapRequest.getReceiver().getFirstName() + " rejected your swap request",
+                NotificationType.REQUEST_REJECTED );
         return mapper.toResponse(saved);
     }
 

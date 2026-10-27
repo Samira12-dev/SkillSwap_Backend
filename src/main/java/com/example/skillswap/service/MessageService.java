@@ -6,15 +6,16 @@ import com.example.skillswap.entity.Conversation;
 import com.example.skillswap.entity.Message;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.enums.NotificationType;
 import com.example.skillswap.mapper.MessageMapper;
 import com.example.skillswap.repository.ConversationRepo;
 import com.example.skillswap.repository.MessageRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class MessageService {
     private final MessageMapper mapper;
     private  final ConversationRepo conversationRepo;
     private final UserRepo userRepo;
+    private final NotificationService notificationService;
 
     @Transactional
     public MessageResponseDto createMessage(MessageRequestDto messageRequestDto,Long conversationID,Long userId){
@@ -41,40 +43,67 @@ public class MessageService {
         message.setConversation(conversation);
 
         Message saved= messageRepo.save(message);
+        Long receiverId;
+
+        if (swap.getSender().getId().equals(userId)) {
+            receiverId = swap.getReceiver().getId();
+        } else {
+            receiverId = swap.getSender().getId();
+        }
+        notificationService.createNotification(
+                receiverId,
+                sender.getFirstName() + " sent you a new message",
+                NotificationType.NEW_MESSAGE
+        );
         return  mapper.toResponse(saved);
     }
-
     @Transactional
-    public MessageResponseDto getMessageById(Long id){
-        Message message=messageRepo.findById(id).orElseThrow(()->new RuntimeException("Message not found"));
+    public MessageResponseDto getMessageById(Long id, Long userId) {
+        Message message = messageRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+        SwapRequest swap = message.getConversation().getSwapRequest();
+        if (!swap.getSender().getId().equals(userId)
+                && !swap.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this conversation");
+        }
         return mapper.toResponse(message);
     }
 
     @Transactional
-    public List<MessageResponseDto> getMessagesByConversation(Long conversationId){
-        List<Message>messages =messageRepo.findByConversationId(conversationId);
-
-        return messages.stream()
-                .map(mapper::toResponse).toList();
+    public Page<MessageResponseDto> getMessagesByConversation(Long conversationId, Long userId, Pageable pageable) {
+        Conversation conversation = conversationRepo.findById(conversationId)
+                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+        SwapRequest swap = conversation.getSwapRequest();
+        if (!swap.getSender().getId().equals(userId)
+                && !swap.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this conversation");
+        }
+        return messageRepo.findByConversationId(conversationId, pageable)
+                .map(mapper::toResponse);
     }
 
     @Transactional
-    public void deleteMessage(Long id){
+    public void deleteMessage(Long id, Long userId) {
         Message message = messageRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Message not found"));
-        messageRepo.delete(message);    }
+        if (!message.getSender().getId().equals(userId)) {
+            throw new RuntimeException("You can only delete your own message");
+        }
+        messageRepo.delete(message);
+    }
 
 
     @Transactional
-    public MessageResponseDto markAsRead(Long id) {
-
+    public MessageResponseDto markAsRead(Long id, Long userId) {
         Message message = messageRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Message not found"));
-
+        SwapRequest swap = message.getConversation().getSwapRequest();
+        if (!swap.getSender().getId().equals(userId)
+                && !swap.getReceiver().getId().equals(userId)) {
+            throw new RuntimeException("You are not part of this conversation");
+        }
         message.setRead(true);
-
         Message saved = messageRepo.save(message);
-
         return mapper.toResponse(saved);
     }
 }
