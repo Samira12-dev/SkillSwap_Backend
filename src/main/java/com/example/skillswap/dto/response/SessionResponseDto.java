@@ -21,4 +21,13 @@ public class SessionResponseDto {
     private SessionStatus status;
     private Long conversationId;
     private String meetingUrl;
+    private Long swapRequestId;
+    private Long senderId;
+    private String senderName;
+    private String senderPhoto;
+    private Long receiverId;
+    private String receiverName;
+    private String receiverPhoto;
+    private String skillOfferedName;
+    private String skillWantedName;
 }

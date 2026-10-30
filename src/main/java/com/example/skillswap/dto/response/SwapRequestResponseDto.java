@@ -21,9 +21,13 @@ public class SwapRequestResponseDto {
 
     private String senderName;
 
+    private String senderPhoto;
+
     private Long receiverId;
 
     private String receiverName;
+
+    private String receiverPhoto;
 
     private Long skillOfferedId;
 

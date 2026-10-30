@@ -18,6 +18,7 @@ public class SkillDetailsResponseDto {
     private Long userId;
     private String category;
     private String userName;
+    private String photo;
     private Long skillId;
     private String skillName;
 }

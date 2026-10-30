@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -25,6 +26,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(e.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxUploadSize(
+            MaxUploadSizeExceededException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body("Profile photos must be 5 MB or smaller");
     }
 
 }

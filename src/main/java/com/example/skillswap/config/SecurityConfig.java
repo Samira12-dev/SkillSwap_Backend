@@ -63,6 +63,7 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(
                 List.of("http://localhost:5173")
+
         );
 
         config.setAllowedMethods(
@@ -114,6 +115,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**")
                         .permitAll()
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .anyRequest()
                         .authenticated()

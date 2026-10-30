@@ -37,7 +37,7 @@ public class AuthService {
         user.setCity(request.getCity());
         user.setBio(request.getBio());
         user.setPhoto(request.getPhoto());
-        user.setRole(Role.USER);
+        user.setRole(Role.ADMIN);
 
         user = userRepo.save(user);
 

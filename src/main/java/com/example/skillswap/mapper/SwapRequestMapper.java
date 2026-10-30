@@ -13,8 +13,10 @@ public interface SwapRequestMapper {
 
     @Mapping(source = "sender.id", target = "senderId")
     @Mapping(source = "sender.firstName", target = "senderName")
+    @Mapping(source = "sender.photo", target = "senderPhoto")
     @Mapping(source = "receiver.id", target = "receiverId")
     @Mapping(source = "receiver.firstName", target = "receiverName")
+    @Mapping(source = "receiver.photo", target = "receiverPhoto")
     @Mapping(source = "skillOffered.id", target = "skillOfferedId")
     @Mapping(source = "skillOffered.name", target = "skillOfferedName")
     @Mapping(source = "skillWanted.id", target = "skillWantedId")

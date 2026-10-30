@@ -15,7 +15,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +32,7 @@ public class UserService {
     private final NotificationRepo notificationRepo;
     private final SkillDetailsRepo skillDetailsRepo;
     private final ReviewService reviewService;
+    private final FileStorageService fileStorageService;
 
 
     @Transactional
@@ -53,6 +56,33 @@ public class UserService {
         mapper.updateUser(dto,user);
         User savedUser= userRepo.save(user);
         return mapper.toResponse(savedUser);
+    }
+
+    @Transactional
+    public UserResponseDTO uploadProfilePhoto(Long userId, String email, MultipartFile file) {
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getId().equals(userId)) {
+            throw new AccessDeniedException("You can only update your own profile photo");
+        }
+
+        String previousPhoto = user.getPhoto();
+        String newPhoto = fileStorageService.storeProfilePhoto(file);
+
+        try {
+            user.setPhoto(newPhoto);
+            User savedUser = userRepo.save(user);
+
+            if (previousPhoto != null && !previousPhoto.equals(newPhoto)) {
+                fileStorageService.deleteManagedPhoto(previousPhoto);
+            }
+
+            return mapper.toResponse(savedUser);
+        } catch (RuntimeException ex) {
+            fileStorageService.deleteManagedPhoto(newPhoto);
+            throw ex;
+        }
     }
 
     @Transactional

@@ -12,6 +12,7 @@ public interface SkillDetailsMapper {
 
     @Mapping(source = "user.id", target = "userId")
     @Mapping(source = "user.firstName", target = "userName")
+    @Mapping(source = "user.photo", target = "photo")
     @Mapping(source = "skill.id", target = "skillId")
     @Mapping(source = "skill.name", target = "skillName")
     @Mapping(source = "skill.category", target = "category")
