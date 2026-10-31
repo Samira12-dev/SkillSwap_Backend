@@ -1,5 +1,6 @@
 package com.example.skillswap.entity;
 
+import com.example.skillswap.enums.AccountStatus;
 import com.example.skillswap.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,6 +31,19 @@ public class User implements UserDetails {
 
     @Column(unique = true)
     private String email;
+
+    @Column(unique = true, length = 30)
+    private String phone;
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
+    @Column(name = "phone_verified", nullable = false)
+    private boolean phoneVerified;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status", nullable = false)
+    private AccountStatus accountStatus;
 
     private String password;
 
@@ -70,6 +84,10 @@ public class User implements UserDetails {
     @PrePersist
     protected  void onCreated(){
         this.createdAt= LocalDateTime.now();
+
+        if (this.accountStatus == null) {
+            this.accountStatus = AccountStatus.ACTIVE;
+        }
     }
 
 

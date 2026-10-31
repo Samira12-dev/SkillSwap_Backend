@@ -1,5 +1,6 @@
 package com.example.skillswap.dto.response;
 
+import com.example.skillswap.enums.AccountStatus;
 import com.example.skillswap.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +23,12 @@ public class UserResponseDTO {
 
     private String email;
 
+    private String phone;
+
+    private boolean emailVerified;
+
+    private boolean phoneVerified;
+
     private String city;
 
     private String bio;
@@ -33,4 +40,6 @@ public class UserResponseDTO {
     private LocalDateTime createdAt;
 
     private Role role;
+
+    private AccountStatus accountStatus;
 }

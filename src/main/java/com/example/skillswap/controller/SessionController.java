@@ -87,6 +87,26 @@ public class SessionController {
         return service.completeSession(sessionId,userId);
     }
 
+    @Operation(summary = "Confirm a pending session completion")
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{sessionId}/confirm-completion/{userId}")
+    public SessionResponseDto confirmCompletion(@PathVariable Long sessionId, @PathVariable Long userId, @AuthenticationPrincipal User principal){
+        if (!principal.getId().equals(userId)) {
+            throw new AccessDeniedException("You can only confirm sessions on your own behalf");
+        }
+        return service.confirmCompletion(sessionId, userId);
+    }
+
+    @Operation(summary = "Dispute a pending session completion")
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/{sessionId}/dispute-completion/{userId}")
+    public SessionResponseDto disputeCompletion(@PathVariable Long sessionId, @PathVariable Long userId, @AuthenticationPrincipal User principal){
+        if (!principal.getId().equals(userId)) {
+            throw new AccessDeniedException("You can only dispute sessions on your own behalf");
+        }
+        return service.disputeCompletion(sessionId, userId);
+    }
+
     @Operation(summary = "Get my sessions")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/my")

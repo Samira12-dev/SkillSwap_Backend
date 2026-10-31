@@ -30,4 +30,10 @@ public class SessionResponseDto {
     private String receiverPhoto;
     private String skillOfferedName;
     private String skillWantedName;
+    private LocalDateTime scheduledEnd;
+    private LocalDateTime completionRequestedAt;
+    private Long completionRequestedById;
+    private String completionRequestedByName;
+    private LocalDateTime completionDisputedAt;
+    private LocalDateTime completedAt;
 }

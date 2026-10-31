@@ -21,6 +21,9 @@ public interface SessionMapper {
     @Mapping(source = "conversation.swapRequest.receiver.photo", target = "receiverPhoto")
     @Mapping(source = "conversation.swapRequest.skillOffered.name", target = "skillOfferedName")
     @Mapping(source = "conversation.swapRequest.skillWanted.name", target = "skillWantedName")
+    @Mapping(source = "completionRequestedBy.id", target = "completionRequestedById")
+    @Mapping(source = "completionRequestedBy.firstName", target = "completionRequestedByName")
+    @Mapping(target = "scheduledEnd", expression = "java(com.example.skillswap.util.SessionTimes.scheduledEnd(session))")
     SessionResponseDto toResponse(Session session);
 
     void updateSession(SessionRequestDto dto, @MappingTarget Session session);

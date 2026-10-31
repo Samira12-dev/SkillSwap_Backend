@@ -6,38 +6,65 @@ import com.example.skillswap.entity.Review;
 import com.example.skillswap.entity.Session;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.enums.NotificationType;
 import com.example.skillswap.enums.SessionStatus;
+import com.example.skillswap.exception.ConflictException;
+import com.example.skillswap.exception.ResourceNotFoundException;
 import com.example.skillswap.mapper.ReviewMapper;
 import com.example.skillswap.repository.ReviewRepo;
 import com.example.skillswap.repository.SessionRepo;
 import com.example.skillswap.repository.UserRepo;
+import com.example.skillswap.util.SessionTimes;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
-    private  final SessionRepo sessionRepo;
-    private  final ReviewRepo repo;
+    private final SessionRepo sessionRepo;
+    private final ReviewRepo repo;
     private final UserRepo userRepo;
     private final ReviewMapper mapper;
-
+    private final NotificationService notificationService;
+    private final Clock clock;
 
     @Transactional
-    public ReviewResponseDto createReview(ReviewRequestDto requestDto, Long reviewerId){
-        User reviewer =userRepo.findById(reviewerId)
-                .orElseThrow(()->new RuntimeException("Reviewer not found"));
-        User reviewee =userRepo.findById(requestDto.getRevieweeId())
-                .orElseThrow(()->new RuntimeException("Reviewee not found"));
-        Session session =sessionRepo.findById(requestDto.getSessionId())
-                .orElseThrow(()->new RuntimeException("session not found"));
-        if(session.getStatus() != SessionStatus.COMPLETED){
-            throw  new RuntimeException("A review can only be done if the session has been completed");
+    public ReviewResponseDto createReview(ReviewRequestDto requestDto, Long reviewerId) {
+        User reviewer = userRepo.findById(reviewerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reviewer not found"));
+
+        User reviewee = userRepo.findById(requestDto.getRevieweeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Reviewee not found"));
+
+        Session session = sessionRepo.findById(requestDto.getSessionId())
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        if (reviewerId.equals(requestDto.getRevieweeId())) {
+            throw new ConflictException("You cannot review yourself.");
+        }
+
+        if (session.getStatus() != SessionStatus.COMPLETED) {
+            throw new ConflictException(
+                    "A review can only be submitted after the session has been completed."
+            );
+        }
+
+        LocalDateTime scheduledEnd = SessionTimes.scheduledEnd(session);
+
+        if (scheduledEnd == null) {
+            throw new ConflictException("The session schedule is incomplete.");
+        }
+
+        if (LocalDateTime.now(clock).isBefore(scheduledEnd)) {
+            throw new ConflictException("This session has not reached its scheduled end yet.");
         }
 
         SwapRequest swapRequest = session.getConversation().getSwapRequest();
@@ -45,56 +72,94 @@ public class ReviewService {
         Long receiverId = swapRequest.getReceiver().getId();
 
         if (!reviewerId.equals(senderId) && !reviewerId.equals(receiverId)) {
-            throw new RuntimeException("You are not a participant in this session");
-        }
-        if (reviewerId.equals(senderId)) {
-            if (!requestDto.getRevieweeId().equals(receiverId)) {
-                throw new RuntimeException("You can only review the other participant");
-            }
+            throw new ConflictException("You are not a participant in this session.");
         }
 
-        if (reviewerId.equals(receiverId)) {
-            if (!requestDto.getRevieweeId().equals(senderId)) {
-                throw new RuntimeException("You can only review the other participant");
-            }
+        Long expectedRevieweeId = reviewerId.equals(senderId) ? receiverId : senderId;
+
+        if (!requestDto.getRevieweeId().equals(expectedRevieweeId)) {
+            throw new ConflictException("You can only review the other participant of this session.");
         }
 
-        Review review =new Review();
+        if (repo.existsByReviewerIdAndSessionId(reviewerId, session.getId())) {
+            throw new ConflictException("You have already reviewed this session.");
+        }
+
+        if (requestDto.getRating() == null
+                || requestDto.getRating() < 1
+                || requestDto.getRating() > 5) {
+            throw new ConflictException("Rating must be between 1 and 5.");
+        }
+
+        String comment = normalizeComment(requestDto.getComment());
+
+        Review review = new Review();
         review.setRating(requestDto.getRating());
-        review.setComment(requestDto.getComment());
+        review.setComment(comment);
         review.setSession(session);
         review.setReviewer(reviewer);
         review.setReviewee(reviewee);
 
-        Review saved= repo.save(review);
+        Review saved = repo.save(review);
 
         reviewee.setRating(calculateAverageRating(reviewee.getId()));
         userRepo.save(reviewee);
 
+        notificationService.createNotification(
+                reviewee.getId(),
+                reviewer.getFirstName() + " left you a review for your completed session.",
+                NotificationType.NEW_REVIEW
+        );
+
         return mapper.toResponse(saved);
     }
+
     @Transactional
-    public Page<ReviewResponseDto> getReviewsByUser(Long userId, Pageable pageable){
+    public Optional<ReviewResponseDto> getMyReviewForSession(Long sessionId, Long reviewerId) {
+        return repo.findByReviewerIdAndSessionId(reviewerId, sessionId)
+                .map(mapper::toResponse);
+    }
+
+    @Transactional
+    public Page<ReviewResponseDto> getReviewsByUser(Long userId, Pageable pageable) {
         return repo.findByRevieweeId(userId, pageable).map(mapper::toResponse);
     }
+
     @Transactional
-    public ReviewResponseDto getReviewById(Long reviewId){
-        Review review =repo.findById(reviewId).orElseThrow(()->new RuntimeException("Review not found"));
+    public ReviewResponseDto getReviewById(Long reviewId) {
+        Review review = repo.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found"));
         return mapper.toResponse(review);
     }
+
     @Transactional
-    public  double calculateAverageRating(Long userId){
+    public double calculateAverageRating(Long userId) {
         List<Review> reviewList = repo.findByRevieweeId(userId, Pageable.unpaged()).getContent();
-        if(reviewList.isEmpty()){
+
+        if (reviewList.isEmpty()) {
             return 0;
         }
-        int total =0;
-        for (Review review:reviewList){
+
+        int total = 0;
+
+        for (Review review : reviewList) {
             total += review.getRating();
         }
-        return total /(double)reviewList.size();
+
+        return total / (double) reviewList.size();
     }
 
+    private String normalizeComment(String value) {
+        if (value == null) {
+            return null;
+        }
 
+        String trimmed = value.trim();
 
+        if (trimmed.length() > 1000) {
+            throw new ConflictException("Comment must not exceed 1000 characters.");
+        }
+
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 }

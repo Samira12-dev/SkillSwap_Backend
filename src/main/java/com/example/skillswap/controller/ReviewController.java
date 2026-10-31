@@ -29,20 +29,31 @@ public class ReviewController {
         }
         return service.createReview(dto,userId);
     }
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/user/{userId}")
     public ResponseEntity<Page<ReviewResponseDto>>getReviewsByUser(@PathVariable Long userId, @PageableDefault(page = 0, size = 10) Pageable pageable){
         return ResponseEntity.ok(service.getReviewsByUser(userId, pageable));
     }
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{reviewId}")
     public ReviewResponseDto getReviewById(@PathVariable Long reviewId){
         return service.getReviewById(reviewId);
     }
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/user/{userId}/average")
     public double calculateAverageRating (@PathVariable Long userId){
      return service.calculateAverageRating(userId);
+    }
+
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @GetMapping("/session/{sessionId}/mine")
+    public ResponseEntity<ReviewResponseDto> getMyReviewForSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal User principal
+    ) {
+        return service.getMyReviewForSession(sessionId, principal.getId())
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
 }

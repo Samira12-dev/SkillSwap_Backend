@@ -20,6 +20,8 @@ public class UpdateProfileRequestDTO {
     private String lastName;
     @Email(message = "Invalid email format")
     private String email;
+    @Size(max = 30, message = "Phone must not exceed 30 characters")
+    private String phone;
     @NotBlank(message = "City is required")
     private String city;
     @Size(max = 1000, message = "Bio must not exceed 1000 characters")

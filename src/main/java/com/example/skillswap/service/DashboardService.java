@@ -137,7 +137,9 @@ public class DashboardService {
 
         List<Session> sessionList = sessionRepo.findAll();
         for (Session session : sessionList) {
-            if (session.getStatus() == SessionStatus.CONFIRMED) {
+            if (session.getStatus() == SessionStatus.CONFIRMED
+                    || session.getStatus() == SessionStatus.COMPLETION_REQUESTED
+                    || session.getStatus() == SessionStatus.COMPLETION_DISPUTED) {
                 activeSession++;
             }
             if (session.getStatus() == SessionStatus.COMPLETED) {

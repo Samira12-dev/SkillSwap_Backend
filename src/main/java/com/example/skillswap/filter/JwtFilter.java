@@ -1,6 +1,8 @@
 package com.example.skillswap.filter;
 
 import com.example.skillswap.config.JwtUtils;
+import com.example.skillswap.entity.User;
+import com.example.skillswap.service.AccountStatusService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -20,13 +23,16 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final AccountStatusService accountStatusService;
 
     public JwtFilter(
             JwtUtils jwtUtil,
-            UserDetailsService userDetailsService
+            UserDetailsService userDetailsService,
+            AccountStatusService accountStatusService
     ) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.accountStatusService = accountStatusService;
     }
 
 
@@ -42,14 +48,34 @@ public class JwtFilter extends OncePerRequestFilter {
             if (jwtUtil.validateJwtToken(token)) {
                 String username = jwtUtil.getUserFromToken(token);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                try {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                    if (userDetails instanceof User user
+                            && accountStatusService.isBlocked(user)) {
+                        SecurityContextHolder.clearContext();
+                        writeUnauthorized(response, "This account is suspended or banned.");
+                        return;
+                    }
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } catch (UsernameNotFoundException ex) {
+                    SecurityContextHolder.clearContext();
+                    writeUnauthorized(response, "This account is no longer available.");
+                    return;
+                }
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"message\":\"" + message + "\"}");
     }
 }

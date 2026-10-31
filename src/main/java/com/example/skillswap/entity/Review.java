@@ -19,7 +19,7 @@ public class Review {
 
     private Integer rating;
 
-    @Column
+    @Column(length = 1000)
     private String comment;
 
     @ManyToOne(fetch = FetchType.LAZY)

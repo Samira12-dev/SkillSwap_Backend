@@ -4,12 +4,17 @@ import com.example.skillswap.dto.request.UpdateProfileRequestDTO;
 import com.example.skillswap.dto.response.UserResponseDTO;
 import com.example.skillswap.entity.Review;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.enums.AccountStatus;
 import com.example.skillswap.enums.Role;
+import com.example.skillswap.exception.ConflictException;
 import com.example.skillswap.mapper.UserMapper;
+import com.example.skillswap.repository.AdminActionRepo;
 import com.example.skillswap.repository.NotificationRepo;
+import com.example.skillswap.repository.ReportRepo;
 import com.example.skillswap.repository.ReviewRepo;
 import com.example.skillswap.repository.SkillDetailsRepo;
 import com.example.skillswap.repository.SwapRequestRepo;
+import com.example.skillswap.repository.UserBanRepo;
 import com.example.skillswap.repository.UserRepo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +36,9 @@ public class UserService {
     private final ReviewRepo reviewRepo;
     private final NotificationRepo notificationRepo;
     private final SkillDetailsRepo skillDetailsRepo;
+    private final UserBanRepo userBanRepo;
+    private final ReportRepo reportRepo;
+    private final AdminActionRepo adminActionRepo;
     private final ReviewService reviewService;
     private final FileStorageService fileStorageService;
 
@@ -53,6 +61,29 @@ public class UserService {
             throw  new RuntimeException("you can only update your profile");
         }
         User user =userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
+
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            String normalizedEmail = dto.getEmail().trim().toLowerCase();
+            userRepo.findByEmail(normalizedEmail).ifPresent(existing -> {
+                if (!existing.getId().equals(userId)) {
+                    throw new ConflictException("Email already exists");
+                }
+            });
+            dto.setEmail(normalizedEmail);
+        }
+
+        if (dto.getPhone() != null && !dto.getPhone().isBlank()) {
+            String normalizedPhone = dto.getPhone().trim().replaceAll("[\\s().-]", "");
+            userRepo.findByPhone(normalizedPhone).ifPresent(existing -> {
+                if (!existing.getId().equals(userId)) {
+                    throw new ConflictException("Phone number already exists");
+                }
+            });
+            dto.setPhone(normalizedPhone);
+        } else {
+            dto.setPhone(null);
+        }
+
         mapper.updateUser(dto,user);
         User savedUser= userRepo.save(user);
         return mapper.toResponse(savedUser);
@@ -92,6 +123,21 @@ public class UserService {
 
         if (user.getRole() == Role.ADMIN) {
             throw new RuntimeException("You cannot delete an admin user");
+        }
+
+        if (user.getAccountStatus() != null && user.getAccountStatus() != AccountStatus.ACTIVE) {
+            throw new ConflictException(
+                    "Suspended or banned accounts cannot be deleted because their contact identifiers are retained."
+            );
+        }
+
+        if (userBanRepo.existsByUserId(userId)
+                || reportRepo.existsByReporterId(userId)
+                || reportRepo.existsByReportedUserId(userId)
+                || adminActionRepo.existsByTargetUserId(userId)) {
+            throw new ConflictException(
+                    "This account has moderation history and cannot be deleted."
+            );
         }
 
         List<Long> affectedRevieweeIds = new ArrayList<>();

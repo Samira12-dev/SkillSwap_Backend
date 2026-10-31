@@ -34,6 +34,19 @@ public class Session {
     private SessionStatus status;
     private String meetingUrl;
 
+    @Column(name = "completion_requested_at")
+    private LocalDateTime completionRequestedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "completion_requested_by")
+    private User completionRequestedBy;
+
+    @Column(name = "completion_disputed_at")
+    private LocalDateTime completionDisputedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id", nullable = false)
     private Conversation conversation;
