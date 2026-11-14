@@ -92,7 +92,26 @@ class ReportServiceTest {
         assertEquals(2L, result.getReportedUserId());
         assertEquals("abusive messages", result.getDescription());
         assertEquals(ReportStatus.PENDING, result.getStatus());
+        assertNull(result.getReporterEmail());
+        assertNull(result.getReportedUserEmail());
         verifyNoInteractions(notificationService, adminAuditService);
+    }
+
+    @Test
+    void adminReportViewIncludesContactInformation() {
+        Report report = new Report();
+        report.setId(10L);
+        report.setReporter(reporter);
+        report.setReportedUser(reportedUser);
+        report.setReason(ReportReason.HARASSMENT);
+        report.setStatus(ReportStatus.PENDING);
+
+        when(reportRepo.findById(10L)).thenReturn(Optional.of(report));
+
+        ReportResponseDto result = service.getReport(10L);
+
+        assertEquals("reporter@example.com", result.getReporterEmail());
+        assertEquals("reported@example.com", result.getReportedUserEmail());
     }
 
     @Test

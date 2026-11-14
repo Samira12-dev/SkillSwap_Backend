@@ -1,8 +1,13 @@
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jre
+
+RUN groupadd --system app \
+    && useradd --system --gid app --home-dir /app --shell /usr/sbin/nologin app
 
 WORKDIR /app
 
-COPY target/*.jar app.jar
+COPY --chown=app:app target/*.jar app.jar
+
+USER app
 
 EXPOSE 8080
 

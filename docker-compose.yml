@@ -3,14 +3,16 @@ services:
     image: mysql:8.0
     container_name: skillswap-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD must be set}
       MYSQL_DATABASE: skillswap_db
+      MYSQL_USER: ${DB_USERNAME:?DB_USERNAME must be set}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
     ports:
-      - "3310:3306"
+      - "127.0.0.1:3310:3306"
     volumes:
       - skillswap-db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,8 +29,21 @@ services:
       DB_URL: ${DB_URL}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      SHOW_SQL: ${SHOW_SQL:-false}
+      SPRINGDOC_ENABLED: ${SPRINGDOC_ENABLED:-false}
+      WS_ALLOWED_ORIGINS: ${WS_ALLOWED_ORIGINS}
+      UPLOAD_DIR: ${UPLOAD_DIR}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:?MAIL_USERNAME must be set}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:?MAIL_PASSWORD must be set}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      MAIL_FROM: ${MAIL_FROM:-${MAIL_USERNAME}}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      EMAIL_VERIFICATION_EXPIRATION_MS: ${EMAIL_VERIFICATION_EXPIRATION_MS:-86400000}
     ports:
       - "8080:8080"
     networks:

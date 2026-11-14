@@ -7,6 +7,7 @@ import com.example.skillswap.entity.Session;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
 import com.example.skillswap.enums.NotificationType;
+import com.example.skillswap.enums.SessionMode;
 import com.example.skillswap.enums.SessionStatus;
 import com.example.skillswap.exception.ConflictException;
 import com.example.skillswap.exception.ResourceNotFoundException;
@@ -21,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
@@ -52,8 +55,9 @@ public class SessionService {
         session.setDuration(requestDto.getDuration());
         session.setMode(requestDto.getMode());
         session.setStatus(SessionStatus.PROPOSED);
-        session.setMeetingUrl(requestDto.getMeetingUrl());
+        session.setMeetingUrl(validateMeetingUrl(requestDto.getMeetingUrl(), requestDto.getMode()));
         session.setConversation(conversation);
+        session.setCreatedBy(participantInSwap(swapRequest, userId));
 
         Session saved = sessionRepo.save(session);
 
@@ -71,6 +75,7 @@ public class SessionService {
         }
 
         mapper.updateSession(dto, session);
+        session.setMeetingUrl(validateMeetingUrl(dto.getMeetingUrl(), dto.getMode()));
 
         return mapper.toResponse(sessionRepo.save(session));
     }
@@ -106,10 +111,13 @@ public class SessionService {
             throw new ConflictException("Session can't be accepted");
         }
 
-        SwapRequest swapRequest = session.getConversation().getSwapRequest();
+        assertParticipant(session, userId, "You are not allowed to accept this session");
 
-        if (!swapRequest.getReceiver().getId().equals(userId)) {
-            throw new ConflictException("You are not allowed to accept this");
+        if (session.getCreatedBy() != null
+                && session.getCreatedBy().getId().equals(userId)) {
+            throw new ConflictException(
+                    "The participant who proposed this session cannot accept it."
+            );
         }
 
         session.setStatus(SessionStatus.CONFIRMED);
@@ -299,8 +307,13 @@ public class SessionService {
     }
 
     private User participantById(Session session, Long userId) {
-        SwapRequest swapRequest = session.getConversation().getSwapRequest();
+        return participantInSwap(
+                session.getConversation().getSwapRequest(),
+                userId
+        );
+    }
 
+    private User participantInSwap(SwapRequest swapRequest, Long userId) {
         if (swapRequest.getSender().getId().equals(userId)) {
             return swapRequest.getSender();
         }
@@ -310,6 +323,37 @@ public class SessionService {
         }
 
         throw new ConflictException("You are not a participant in this session");
+    }
+
+    private String validateMeetingUrl(String rawMeetingUrl, SessionMode mode) {
+        if (mode != SessionMode.ONLINE) {
+            return null;
+        }
+
+        if (rawMeetingUrl == null || rawMeetingUrl.isBlank()) {
+            throw new ConflictException("Online sessions require a meeting URL.");
+        }
+
+        String meetingUrl = rawMeetingUrl.trim();
+
+        try {
+            URI uri = new URI(meetingUrl);
+            String scheme = uri.getScheme();
+            boolean webScheme = "https".equalsIgnoreCase(scheme)
+                    || "http".equalsIgnoreCase(scheme);
+
+            if (!webScheme || uri.getHost() == null || uri.getHost().isBlank()) {
+                throw new ConflictException(
+                        "The meeting URL must be a valid http or https address."
+                );
+            }
+        } catch (URISyntaxException e) {
+            throw new ConflictException(
+                    "The meeting URL must be a valid http or https address."
+            );
+        }
+
+        return meetingUrl;
     }
 
     private Long otherParticipantId(Session session, Long userId) {

@@ -1,5 +1,6 @@
 package com.example.skillswap.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.example.skillswap.enums.ReportReason;
 import com.example.skillswap.enums.ReportStatus;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReportResponseDto {
     private Long id;
     private Long reporterId;

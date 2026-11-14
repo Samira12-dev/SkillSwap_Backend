@@ -36,6 +36,13 @@ public class SwapRequest {
     @JoinColumn(name = "receiver_id")
     private User receiver;
 
+    @Column(name = "completion_requested_at")
+    private LocalDateTime completionRequestedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "completion_requested_by")
+    private User completionRequestedBy;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "skill_offered_id")
     private Skill skillOffered;

@@ -71,10 +71,35 @@ class JwtFilterTest {
         when(jwtUtil.getUserFromToken("valid-token")).thenReturn("active@example.com");
         when(userDetailsService.loadUserByUsername("active@example.com")).thenReturn(active);
         when(accountStatusService.isBlocked(active)).thenReturn(false);
+        when(jwtUtil.isTokenVersionValid("valid-token", active)).thenReturn(true);
 
         filter.doFilter(request, response, filterChain);
 
         assertEquals(200, response.getStatus());
         verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    void revokedTokenIsRejected() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer revoked-token");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        User active = new User();
+        active.setId(3L);
+        active.setEmail("active@example.com");
+        active.setRole(com.example.skillswap.enums.Role.USER);
+
+        when(jwtUtil.validateJwtToken("revoked-token")).thenReturn(true);
+        when(jwtUtil.getUserFromToken("revoked-token")).thenReturn("active@example.com");
+        when(userDetailsService.loadUserByUsername("active@example.com")).thenReturn(active);
+        when(accountStatusService.isBlocked(active)).thenReturn(false);
+        when(jwtUtil.isTokenVersionValid("revoked-token", active)).thenReturn(false);
+
+        filter.doFilter(request, response, filterChain);
+
+        assertEquals(401, response.getStatus());
+        assertTrue(response.getContentAsString().contains("Session expired"));
+        verify(filterChain, never()).doFilter(request, response);
     }
 }

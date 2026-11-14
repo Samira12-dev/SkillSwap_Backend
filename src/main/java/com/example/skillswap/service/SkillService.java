@@ -1,4 +1,5 @@
 package com.example.skillswap.service;
+import com.example.skillswap.exception.BadRequestException;
 
 import com.example.skillswap.dto.request.SkillDetailsRequestDto;
 import com.example.skillswap.dto.request.SkillRequestDto;
@@ -38,7 +39,7 @@ public class SkillService {
     @Transactional
     public SkillResponseDto createSkill(SkillRequestDto requestDto){
     if(repo.existsByName(requestDto.getName())){
-    throw  new RuntimeException("Skill already exists");
+    throw  new BadRequestException("Skill already exists");
    }
         Skill skill= mapper.toEntity(requestDto);
        Skill savedSkill=repo.save(skill);
@@ -48,7 +49,7 @@ public class SkillService {
     @Transactional
     public SkillResponseDto updateSkill(Long id,SkillRequestDto requestDto){
         Skill skill = repo.findById(id).orElseThrow(()->
-                new RuntimeException("Skill  not found"));
+                new BadRequestException("Skill  not found"));
 
         mapper.updateSkill(requestDto,skill);
         return mapper.toResponse(skill);
@@ -63,7 +64,7 @@ public class SkillService {
 
     @Transactional
     public SkillResponseDto findSkillById(Long id){
-        Skill skill=repo.findById(id).orElseThrow(()->new RuntimeException("Skill not found"));
+        Skill skill=repo.findById(id).orElseThrow(()->new BadRequestException("Skill not found"));
         return mapper.toResponse(skill);
     }
 
@@ -71,12 +72,12 @@ public class SkillService {
     public void deleteSkill(Long id){
 
         if (detailsRepo.existsBySkillId(id)) {
-            throw new RuntimeException("Skill is used by users");
+            throw new BadRequestException("Skill is used by users");
         }
 
         if (swapRequestRepo.existsBySkillOfferedId(id)
                 || swapRequestRepo.existsBySkillWantedId(id)) {
-            throw new RuntimeException("Skill is used in swap requests");
+            throw new BadRequestException("Skill is used in swap requests");
         }
         repo.deleteById(id);
     }
@@ -87,10 +88,10 @@ public class SkillService {
             throw new AccessDeniedException ("Not your account");
         }
         if (detailsRepo.existsByUserIdAndSkillIdAndType(userId, requestDto.getSkillId(), requestDto.getType())) {
-            throw new RuntimeException("This skill is already added");
+            throw new BadRequestException("This skill is already added");
         }
-        User user = userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
-        Skill skill =repo.findById(requestDto.getSkillId()).orElseThrow(()->new RuntimeException("Skill not found"));
+        User user = userRepo.findById(userId).orElseThrow(()->new BadRequestException("User not found"));
+        Skill skill =repo.findById(requestDto.getSkillId()).orElseThrow(()->new BadRequestException("Skill not found"));
         SkillDetails skillDetails =new SkillDetails();
         skillDetails.setUser(user);
         skillDetails.setSkill(skill);
@@ -105,7 +106,7 @@ public class SkillService {
             throw new AccessDeniedException("Not your account");
         }
         SkillDetails skillDetails = detailsRepo.findByUserIdAndSkillId(userId, skillId)
-                .orElseThrow(() -> new RuntimeException("Skill not found for this user"));
+                .orElseThrow(() -> new BadRequestException("Skill not found for this user"));
         skillDetails.setType(requestDto.getType());
         skillDetails.setLevel(requestDto.getLevel());
         SkillDetails updated = detailsRepo.save(skillDetails);
@@ -117,14 +118,14 @@ public class SkillService {
         if (currentUser.getRole() != Role.ADMIN && !currentUser.getId().equals(userId)) {
             throw new AccessDeniedException("Not your account");
         }
-        SkillDetails skillDetails= detailsRepo.findByUserIdAndSkillId(userId,skillId).orElseThrow(()->new RuntimeException("skill not found for this user"));
+        SkillDetails skillDetails= detailsRepo.findByUserIdAndSkillId(userId,skillId).orElseThrow(()->new BadRequestException("skill not found for this user"));
         detailsRepo.delete(skillDetails);
     }
 
     @Transactional
     public Page<SkillDetailsResponseDto> getUserSkills(Long userId, Pageable pageable,User currentUser){
         if (currentUser.getRole() != Role.ADMIN && !currentUser.getId().equals(userId)) {
-            throw new RuntimeException("Not your account");
+            throw new BadRequestException("Not your account");
         }
        return detailsRepo.findByUserId(userId, pageable).map(detailsMapper::toResponse);
     }

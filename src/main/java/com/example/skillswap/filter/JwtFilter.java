@@ -58,6 +58,13 @@ public class JwtFilter extends OncePerRequestFilter {
                         return;
                     }
 
+                    if (userDetails instanceof User user
+                            && !jwtUtil.isTokenVersionValid(token, user)) {
+                        SecurityContextHolder.clearContext();
+                        writeUnauthorized(response, "Session expired. Please sign in again.");
+                        return;
+                    }
+
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
 

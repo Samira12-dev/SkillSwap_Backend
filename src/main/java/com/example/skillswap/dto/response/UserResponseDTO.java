@@ -2,6 +2,7 @@ package com.example.skillswap.dto.response;
 
 import com.example.skillswap.enums.AccountStatus;
 import com.example.skillswap.enums.Role;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponseDTO {
 
     private Long id;
@@ -25,9 +27,9 @@ public class UserResponseDTO {
 
     private String phone;
 
-    private boolean emailVerified;
+    private Boolean emailVerified;
 
-    private boolean phoneVerified;
+    private Boolean phoneVerified;
 
     private String city;
 

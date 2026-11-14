@@ -68,12 +68,13 @@ public class ReportService {
         report.setDescription(normalizeNullable(dto.getDescription()));
         report.setStatus(ReportStatus.PENDING);
 
-        return toResponse(reportRepo.save(report));
+        return toResponse(reportRepo.save(report), false);
     }
 
     @Transactional
     public Page<ReportResponseDto> getMyReports(Long reporterId, Pageable pageable) {
-        return reportRepo.findByReporterId(reporterId, pageable).map(this::toResponse);
+        return reportRepo.findByReporterId(reporterId, pageable)
+                .map(report -> toResponse(report, false));
     }
 
     @Transactional
@@ -82,17 +83,19 @@ public class ReportService {
             ReportReason reason,
             Pageable pageable
     ) {
-        return reportRepo.searchReports(status, reason, pageable).map(this::toResponse);
+        return reportRepo.searchReports(status, reason, pageable)
+                .map(report -> toResponse(report, true));
     }
 
     @Transactional
     public Page<ReportResponseDto> getReportsForUser(Long userId, Pageable pageable) {
-        return reportRepo.findByReportedUserId(userId, pageable).map(this::toResponse);
+        return reportRepo.findByReportedUserId(userId, pageable)
+                .map(report -> toResponse(report, true));
     }
 
     @Transactional
     public ReportResponseDto getReport(Long reportId) {
-        return toResponse(findReport(reportId));
+        return toResponse(findReport(reportId), true);
     }
 
     @Transactional
@@ -146,7 +149,7 @@ public class ReportService {
                         + (dto.getAdminNote() == null ? "" : ": " + dto.getAdminNote())
         );
 
-        return toResponse(saved);
+        return toResponse(saved, true);
     }
 
     private Report findReport(Long reportId) {
@@ -154,7 +157,7 @@ public class ReportService {
                 .orElseThrow(() -> new ResourceNotFoundException("Report not found."));
     }
 
-    private ReportResponseDto toResponse(Report report) {
+    private ReportResponseDto toResponse(Report report, boolean includeContactInfo) {
         User reporter = report.getReporter();
         User reportedUser = report.getReportedUser();
         User handledBy = report.getHandledBy();
@@ -162,28 +165,32 @@ public class ReportService {
         return new ReportResponseDto(
                 report.getId(),
                 reporter.getId(),
-                displayName(reporter),
-                reporter.getEmail(),
+                displayName(reporter, includeContactInfo),
+                includeContactInfo ? reporter.getEmail() : null,
                 reportedUser.getId(),
-                displayName(reportedUser),
-                reportedUser.getEmail(),
+                displayName(reportedUser, includeContactInfo),
+                includeContactInfo ? reportedUser.getEmail() : null,
                 report.getReason(),
                 report.getDescription(),
                 report.getStatus(),
                 report.getAdminNote(),
                 handledBy == null ? null : handledBy.getId(),
-                handledBy == null ? null : displayName(handledBy),
+                handledBy == null ? null : displayName(handledBy, includeContactInfo),
                 report.getCreatedAt(),
                 report.getUpdatedAt(),
                 report.getHandledAt()
         );
     }
 
-    private String displayName(User user) {
+    private String displayName(User user, boolean includeEmailFallback) {
         String name = ((user.getFirstName() == null ? "" : user.getFirstName()) + " "
                 + (user.getLastName() == null ? "" : user.getLastName())).trim();
 
-        return name.isEmpty() ? user.getEmail() : name;
+        if (!name.isEmpty()) {
+            return name;
+        }
+
+        return includeEmailFallback ? user.getEmail() : "User #" + user.getId();
     }
 
     private String normalizeNullable(String value) {

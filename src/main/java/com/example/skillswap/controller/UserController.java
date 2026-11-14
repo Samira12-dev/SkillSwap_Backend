@@ -23,8 +23,8 @@ public class UserController {
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{userId}")
-    public UserResponseDTO getUserById(@PathVariable Long userId){
-        return service.getUserById(userId);
+    public UserResponseDTO getUserById(@PathVariable Long userId, Authentication authentication){
+        return service.getUserById(userId, authentication.getName());
     }
 
 

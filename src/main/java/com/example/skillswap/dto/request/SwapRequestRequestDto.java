@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Getter
 @Setter
@@ -23,5 +24,6 @@ public class SwapRequestRequestDto {
     private Long skillWantedId;
 
     @NotBlank(message = "Message is required")
+    @Size(max = 2000, message = "Message must not exceed 2000 characters")
     private String message;
 }

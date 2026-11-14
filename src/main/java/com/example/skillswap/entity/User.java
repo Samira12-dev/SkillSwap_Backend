@@ -38,8 +38,17 @@ public class User implements UserDetails {
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified;
 
+    @Column(name = "email_verification_token_hash", unique = true, length = 64)
+    private String emailVerificationTokenHash;
+
+    @Column(name = "email_verification_expires_at")
+    private LocalDateTime emailVerificationExpiresAt;
+
     @Column(name = "phone_verified", nullable = false)
     private boolean phoneVerified;
+
+    @Column(name = "token_version", nullable = false)
+    private long tokenVersion;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "account_status", nullable = false)

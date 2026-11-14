@@ -1,4 +1,5 @@
 package com.example.skillswap.service;
+import com.example.skillswap.exception.BadRequestException;
 
 import com.example.skillswap.dto.request.UpdateProfileRequestDTO;
 import com.example.skillswap.dto.response.UserResponseDTO;
@@ -44,9 +45,22 @@ public class UserService {
 
 
     @Transactional
-    public UserResponseDTO getUserById(Long userId){
-        User user=userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
-        return mapper.toResponse(user);
+    public UserResponseDTO getUserById(Long userId, String requesterEmail){
+        User user=userRepo.findById(userId).orElseThrow(()->new BadRequestException("User not found"));
+        User requester=userRepo.findByEmail(requesterEmail)
+                .orElseThrow(()->new BadRequestException("User not found"));
+        UserResponseDTO response = mapper.toResponse(user);
+
+        if (!requester.getId().equals(userId) && requester.getRole() != Role.ADMIN) {
+            response.setEmail(null);
+            response.setPhone(null);
+            response.setEmailVerified(null);
+            response.setPhoneVerified(null);
+            response.setRole(null);
+            response.setAccountStatus(null);
+        }
+
+        return response;
     }
 
     @Transactional
@@ -56,11 +70,11 @@ public class UserService {
 
     @Transactional
     public UserResponseDTO updateProfile(Long userId,String email, UpdateProfileRequestDTO dto){
-        User userNow = userRepo.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User userNow = userRepo.findByEmail(email).orElseThrow(() -> new BadRequestException("User not found"));
         if(!userNow.getId().equals(userId)){
-            throw  new RuntimeException("you can only update your profile");
+            throw  new BadRequestException("you can only update your profile");
         }
-        User user =userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
+        User user =userRepo.findById(userId).orElseThrow(()->new BadRequestException("User not found"));
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
             String normalizedEmail = dto.getEmail().trim().toLowerCase();
@@ -92,7 +106,7 @@ public class UserService {
     @Transactional
     public UserResponseDTO uploadProfilePhoto(Long userId, String email, MultipartFile file) {
         User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BadRequestException("User not found"));
 
         if (!user.getId().equals(userId)) {
             throw new AccessDeniedException("You can only update your own profile photo");
@@ -119,10 +133,10 @@ public class UserService {
     @Transactional
     public void deleteUser(Long userId) {
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BadRequestException("User not found"));
 
         if (user.getRole() == Role.ADMIN) {
-            throw new RuntimeException("You cannot delete an admin user");
+            throw new BadRequestException("You cannot delete an admin user");
         }
 
         if (user.getAccountStatus() != null && user.getAccountStatus() != AccountStatus.ACTIVE) {

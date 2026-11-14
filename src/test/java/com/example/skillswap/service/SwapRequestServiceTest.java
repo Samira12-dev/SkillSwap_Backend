@@ -71,6 +71,7 @@ class SwapRequestServiceTest {
         when(userRepo.findById(2L)).thenReturn(Optional.of(receiver));
         when(skillRepo.findById(10L)).thenReturn(Optional.of(offer));
         when(skillRepo.findById(20L)).thenReturn(Optional.of(wanted));
+        when(detailsRepo.existsByUserIdAndSkillId(1L,10L)).thenReturn(true);
         when(detailsRepo.existsByUserIdAndSkillId(2L,20L)).thenReturn(true);
 
         when(swapRequestRepo.save(any(SwapRequest.class))).thenReturn(saved);
@@ -114,5 +115,67 @@ class SwapRequestServiceTest {
         assertEquals(SwapStatus.ACCEPTED,swapRequest1.getSwapStatus());
         assertEquals(responseDto,result);
 
+    }
+
+    @Test
+    void senderCannotOfferSkillThatIsNotOwnedByThem() {
+        User sender = new User();
+        sender.setId(1L);
+        User receiver = new User();
+        receiver.setId(2L);
+
+        SwapRequestRequestDto requestDto = new SwapRequestRequestDto();
+        requestDto.setReceiverId(2L);
+        requestDto.setSkillOfferedId(10L);
+        requestDto.setSkillWantedId(20L);
+        requestDto.setMessage("let's message");
+
+        when(userRepo.findById(1L)).thenReturn(Optional.of(sender));
+        when(userRepo.findById(2L)).thenReturn(Optional.of(receiver));
+        when(skillRepo.findById(10L)).thenReturn(Optional.of(new Skill()));
+        when(skillRepo.findById(20L)).thenReturn(Optional.of(new Skill()));
+        when(detailsRepo.existsByUserIdAndSkillId(1L, 10L)).thenReturn(false);
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.createSwapRequest(1L, requestDto)
+        );
+    }
+
+    @Test
+    void swapCompletionRequiresTheOtherParticipantToConfirm() {
+        User sender = new User();
+        sender.setId(1L);
+        sender.setFirstName("Sender");
+        User receiver = new User();
+        receiver.setId(2L);
+        receiver.setFirstName("Receiver");
+
+        SwapRequest swapRequest = new SwapRequest();
+        swapRequest.setId(100L);
+        swapRequest.setSender(sender);
+        swapRequest.setReceiver(receiver);
+        swapRequest.setSwapStatus(SwapStatus.ACCEPTED);
+
+        when(swapRequestRepo.findById(100L)).thenReturn(Optional.of(swapRequest));
+        when(swapRequestRepo.save(any(SwapRequest.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toResponse(any(SwapRequest.class)))
+                .thenReturn(new SwapRequestResponseDto());
+
+        service.completeSwapRequest(100L, 1L);
+
+        assertEquals(SwapStatus.COMPLETION_REQUESTED, swapRequest.getSwapStatus());
+        assertEquals(sender, swapRequest.getCompletionRequestedBy());
+        assertNotNull(swapRequest.getCompletionRequestedAt());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> service.completeSwapRequest(100L, 1L)
+        );
+
+        service.completeSwapRequest(100L, 2L);
+
+        assertEquals(SwapStatus.COMPLETED, swapRequest.getSwapStatus());
     }
 }

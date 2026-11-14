@@ -15,6 +15,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import java.util.Optional;
 
@@ -93,5 +95,52 @@ class ConversationServiceTest {
                 service.getConversationById(20L, 1L);
 
         assertEquals(responseDto, result);
+    }
+
+    @Test
+    void isParticipantReturnsTrueForSenderOrReceiver() {
+        User sender = new User();
+        sender.setId(1L);
+
+        User receiver = new User();
+        receiver.setId(2L);
+
+        SwapRequest swapRequest = new SwapRequest();
+        swapRequest.setSender(sender);
+        swapRequest.setReceiver(receiver);
+
+        Conversation conversation = new Conversation();
+        conversation.setId(20L);
+        conversation.setSwapRequest(swapRequest);
+
+        when(repo.findById(20L)).thenReturn(Optional.of(conversation));
+
+        assertTrue(service.isParticipant(20L, 1L));
+        assertTrue(service.isParticipant(20L, 2L));
+    }
+
+    @Test
+    void isParticipantReturnsFalseForNonParticipantOrMissingConversation() {
+        User sender = new User();
+        sender.setId(1L);
+
+        User receiver = new User();
+        receiver.setId(2L);
+
+        SwapRequest swapRequest = new SwapRequest();
+        swapRequest.setSender(sender);
+        swapRequest.setReceiver(receiver);
+
+        Conversation conversation = new Conversation();
+        conversation.setId(20L);
+        conversation.setSwapRequest(swapRequest);
+
+        when(repo.findById(20L)).thenReturn(Optional.of(conversation));
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+
+        assertFalse(service.isParticipant(20L, 3L));
+        assertFalse(service.isParticipant(99L, 1L));
+        assertFalse(service.isParticipant(null, 1L));
+        assertFalse(service.isParticipant(20L, null));
     }
 }

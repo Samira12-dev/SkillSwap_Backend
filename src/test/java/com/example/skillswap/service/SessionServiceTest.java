@@ -1,10 +1,12 @@
 package com.example.skillswap.service;
 
+import com.example.skillswap.dto.request.SessionRequestDto;
 import com.example.skillswap.dto.response.SessionResponseDto;
 import com.example.skillswap.entity.Conversation;
 import com.example.skillswap.entity.Session;
 import com.example.skillswap.entity.SwapRequest;
 import com.example.skillswap.entity.User;
+import com.example.skillswap.enums.SessionMode;
 import com.example.skillswap.enums.SessionStatus;
 import com.example.skillswap.exception.ConflictException;
 import com.example.skillswap.mapper.SessionMapper;
@@ -26,6 +28,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -88,8 +92,9 @@ class SessionServiceTest {
     }
 
     @Test
-    void acceptSession() {
+    void otherParticipantCanAcceptSession() {
         Session session = session(SessionStatus.PROPOSED, LocalDateTime.of(2026, 10, 30, 13, 0), 60);
+        session.setCreatedBy(sender);
         SessionResponseDto responseDto = new SessionResponseDto();
 
         when(repo.findById(10L)).thenReturn(Optional.of(session));
@@ -100,6 +105,52 @@ class SessionServiceTest {
 
         assertEquals(SessionStatus.CONFIRMED, session.getStatus());
         assertEquals(responseDto, result);
+    }
+
+    @Test
+    void creatorCannotAcceptOwnSessionProposal() {
+        Session session = session(SessionStatus.PROPOSED, LocalDateTime.of(2026, 10, 30, 13, 0), 60);
+        session.setCreatedBy(sender);
+
+        when(repo.findById(10L)).thenReturn(Optional.of(session));
+
+        assertThrows(ConflictException.class, () -> service.acceptSession(10L, 1L));
+        assertEquals(SessionStatus.PROPOSED, session.getStatus());
+    }
+
+    @Test
+    void onlineSessionRequiresSafeMeetingUrl() {
+        SessionRequestDto dto = new SessionRequestDto();
+        dto.setConversationId(3L);
+        dto.setDate(LocalDateTime.of(2026, 10, 31, 13, 0));
+        dto.setDuration(60);
+        dto.setMode(SessionMode.ONLINE);
+        dto.setMeetingUrl("javascript:alert(1)");
+
+        when(conversationRepo.findById(3L)).thenReturn(Optional.of(conversation));
+
+        assertThrows(ConflictException.class, () -> service.createSession(dto, 1L));
+    }
+
+    @Test
+    void onlineSessionRecordsSafeMeetingUrlAndCreator() {
+        SessionRequestDto dto = new SessionRequestDto();
+        dto.setConversationId(3L);
+        dto.setDate(LocalDateTime.of(2026, 10, 31, 13, 0));
+        dto.setDuration(60);
+        dto.setMode(SessionMode.ONLINE);
+        dto.setMeetingUrl("https://meet.example.com/room");
+
+        when(conversationRepo.findById(3L)).thenReturn(Optional.of(conversation));
+        when(repo.save(any(Session.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toResponse(any(Session.class))).thenReturn(new SessionResponseDto());
+
+        service.createSession(dto, 1L);
+
+        verify(repo).save(argThat(saved ->
+                saved.getCreatedBy() == sender
+                        && "https://meet.example.com/room".equals(saved.getMeetingUrl())
+        ));
     }
 
     @Test

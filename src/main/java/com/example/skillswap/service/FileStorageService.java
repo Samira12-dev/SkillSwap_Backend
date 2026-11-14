@@ -1,4 +1,5 @@
 package com.example.skillswap.service;
+import com.example.skillswap.exception.BadRequestException;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,30 +33,30 @@ public class FileStorageService {
 
     public String storeProfilePhoto(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new RuntimeException("Please select an image to upload");
+            throw new BadRequestException("Please select an image to upload");
         }
 
         if (file.getSize() > MAX_PROFILE_PHOTO_BYTES) {
-            throw new RuntimeException("Profile photos must be 5 MB or smaller");
+            throw new BadRequestException("Profile photos must be 5 MB or smaller");
         }
 
         String extension = detectImageExtension(file);
 
         if (extension == null) {
-            throw new RuntimeException("Only JPEG, PNG, and WebP images are supported");
+            throw new BadRequestException("Only JPEG, PNG, and WebP images are supported");
         }
 
         String filename = UUID.randomUUID() + extension;
         Path target = uploadRoot.resolve(filename).normalize();
 
         if (!target.startsWith(uploadRoot)) {
-            throw new RuntimeException("Invalid upload path");
+            throw new BadRequestException("Invalid upload path");
         }
 
         try (InputStream input = file.getInputStream()) {
             Files.copy(input, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
-            throw new RuntimeException("Could not store the profile photo", ex);
+            throw new BadRequestException("Could not store the profile photo", ex);
         }
 
         return PUBLIC_PREFIX + filename;
@@ -115,7 +116,7 @@ public class FileStorageService {
                 return ".webp";
             }
         } catch (IOException ex) {
-            throw new RuntimeException("Could not read the selected image", ex);
+            throw new BadRequestException("Could not read the selected image", ex);
         }
 
         return null;

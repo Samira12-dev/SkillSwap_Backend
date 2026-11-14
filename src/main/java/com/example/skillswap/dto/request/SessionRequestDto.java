@@ -4,6 +4,7 @@ import com.example.skillswap.enums.SessionMode;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,5 +25,6 @@ public class SessionRequestDto {
     private SessionMode mode;
     @NotNull(message = "Conversation ID is required")
     private Long conversationId;
+    @Size(max = 500, message = "Meeting URL must not exceed 500 characters")
     private String meetingUrl;
 }

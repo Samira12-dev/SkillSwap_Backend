@@ -1,4 +1,5 @@
 package com.example.skillswap.service;
+import com.example.skillswap.exception.BadRequestException;
 
 import com.example.skillswap.dto.response.ConversationResponseDto;
 import com.example.skillswap.entity.Conversation;
@@ -26,15 +27,15 @@ public class ConversationService {
 
     @Transactional
     public ConversationResponseDto createCoersation( Long swapId, Long userId){
-        SwapRequest swapRequest=swapRequestRepo.findById(swapId).orElseThrow(()->new RuntimeException("swap not found"));
+        SwapRequest swapRequest=swapRequestRepo.findById(swapId).orElseThrow(()->new BadRequestException("swap not found"));
         if(swapRequest.getSwapStatus()!= SwapStatus.ACCEPTED){
-            throw  new RuntimeException("Conversation can only created if swap accepted");
+            throw  new BadRequestException("Conversation can only created if swap accepted");
         }
         if (!swapRequest.getSender().getId().equals(userId) && !swapRequest.getReceiver().getId().equals(userId)) {
-            throw new RuntimeException("You are not part of this swap");
+            throw new BadRequestException("You are not part of this swap");
         }
         if(conversationRepo.findBySwapRequestId(swapId).isPresent()){
-            throw new RuntimeException("Conversation already exists");
+            throw new BadRequestException("Conversation already exists");
         }
         Conversation conversation= new Conversation();
         conversation.setSwapRequest(swapRequest);
@@ -45,11 +46,11 @@ public class ConversationService {
 
     @Transactional
     public ConversationResponseDto getConversationById(Long id, Long userId){
-        Conversation conversation=conversationRepo.findById(id).orElseThrow(()->new RuntimeException("Conversation not found"));
+        Conversation conversation=conversationRepo.findById(id).orElseThrow(()->new BadRequestException("Conversation not found"));
         SwapRequest swapRequest = conversation.getSwapRequest();
         if (!swapRequest.getSender().getId().equals(userId)
                 && !swapRequest.getReceiver().getId().equals(userId)) {
-            throw new RuntimeException("You are not part of this conversation");
+            throw new BadRequestException("You are not part of this conversation");
         }
         return mapper.toResponse(conversation);
     }
@@ -70,9 +71,28 @@ public class ConversationService {
     }
 
     @Transactional
+    public boolean isParticipant(Long conversationId, Long userId) {
+        if (conversationId == null || userId == null) {
+            return false;
+        }
+
+        return conversationRepo.findById(conversationId)
+                .map(conversation -> {
+                    SwapRequest swapRequest = conversation.getSwapRequest();
+
+                    return swapRequest != null
+                            && swapRequest.getSender() != null
+                            && swapRequest.getReceiver() != null
+                            && (swapRequest.getSender().getId().equals(userId)
+                            || swapRequest.getReceiver().getId().equals(userId));
+                })
+                .orElse(false);
+    }
+
+    @Transactional
     public ConversationResponseDto getConversationBetweenUsers(Long user1Id, Long user2Id,Long requestUser){
         if (!requestUser.equals(user1Id) && !requestUser.equals(user2Id)) {
-            throw new RuntimeException("You are not part of this conversation");
+            throw new BadRequestException("You are not part of this conversation");
         }
         List<Conversation>conversations =conversationRepo.findAll();
         for (Conversation conversation:conversations){
@@ -84,7 +104,7 @@ public class ConversationService {
                 return  mapper.toResponse(conversation);
             }
         }
-        throw new RuntimeException("Conversation not found");
+        throw new BadRequestException("Conversation not found");
     }
 
 

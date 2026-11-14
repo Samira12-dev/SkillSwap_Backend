@@ -1,4 +1,5 @@
 package com.example.skillswap.service;
+import com.example.skillswap.exception.BadRequestException;
 
 import com.example.skillswap.dto.request.MessageRequestDto;
 import com.example.skillswap.dto.response.MessageResponseDto;
@@ -30,12 +31,12 @@ public class MessageService {
     @Transactional
     public MessageResponseDto createMessage(MessageRequestDto messageRequestDto,Long conversationID,Long userId){
         Conversation conversation =conversationRepo.findById(conversationID).orElseThrow(()->
-                new RuntimeException("Conversation not found"));
+                new BadRequestException("Conversation not found"));
         SwapRequest swap = conversation.getSwapRequest();
         if(!swap.getSender().getId().equals(userId) && !swap.getReceiver().getId().equals(userId)){
-            throw new RuntimeException("You are not part of this conversation");
+            throw new BadRequestException("You are not part of this conversation");
         }
-        User sender= userRepo.findById(userId).orElseThrow(()->new RuntimeException("User not found"));
+        User sender= userRepo.findById(userId).orElseThrow(()->new BadRequestException("User not found"));
 
         Message message =new Message();
         message.setSender(sender);
@@ -60,11 +61,11 @@ public class MessageService {
     @Transactional
     public MessageResponseDto getMessageById(Long id, Long userId) {
         Message message = messageRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found"));
+                .orElseThrow(() -> new BadRequestException("Message not found"));
         SwapRequest swap = message.getConversation().getSwapRequest();
         if (!swap.getSender().getId().equals(userId)
                 && !swap.getReceiver().getId().equals(userId)) {
-            throw new RuntimeException("You are not part of this conversation");
+            throw new BadRequestException("You are not part of this conversation");
         }
         return mapper.toResponse(message);
     }
@@ -72,11 +73,11 @@ public class MessageService {
     @Transactional
     public Page<MessageResponseDto> getMessagesByConversation(Long conversationId, Long userId, Pageable pageable) {
         Conversation conversation = conversationRepo.findById(conversationId)
-                .orElseThrow(() -> new RuntimeException("Conversation not found"));
+                .orElseThrow(() -> new BadRequestException("Conversation not found"));
         SwapRequest swap = conversation.getSwapRequest();
         if (!swap.getSender().getId().equals(userId)
                 && !swap.getReceiver().getId().equals(userId)) {
-            throw new RuntimeException("You are not part of this conversation");
+            throw new BadRequestException("You are not part of this conversation");
         }
         return messageRepo.findByConversationId(conversationId, pageable)
                 .map(mapper::toResponse);
@@ -85,9 +86,9 @@ public class MessageService {
     @Transactional
     public void deleteMessage(Long id, Long userId) {
         Message message = messageRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found"));
+                .orElseThrow(() -> new BadRequestException("Message not found"));
         if (!message.getSender().getId().equals(userId)) {
-            throw new RuntimeException("You can only delete your own message");
+            throw new BadRequestException("You can only delete your own message");
         }
         messageRepo.delete(message);
     }
@@ -96,11 +97,11 @@ public class MessageService {
     @Transactional
     public MessageResponseDto markAsRead(Long id, Long userId) {
         Message message = messageRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Message not found"));
+                .orElseThrow(() -> new BadRequestException("Message not found"));
         SwapRequest swap = message.getConversation().getSwapRequest();
         if (!swap.getSender().getId().equals(userId)
                 && !swap.getReceiver().getId().equals(userId)) {
-            throw new RuntimeException("You are not part of this conversation");
+            throw new BadRequestException("You are not part of this conversation");
         }
         message.setRead(true);
         Message saved = messageRepo.save(message);

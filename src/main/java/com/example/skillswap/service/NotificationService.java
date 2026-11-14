@@ -1,4 +1,5 @@
 package com.example.skillswap.service;
+import com.example.skillswap.exception.BadRequestException;
 
 import com.example.skillswap.dto.response.NotificationResponseDto;
 import com.example.skillswap.entity.Notification;
@@ -24,7 +25,7 @@ public class NotificationService {
     @Transactional
     public NotificationResponseDto createNotification(Long userId, String message, NotificationType type){
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new BadRequestException("User not found"));
         Notification notification = new Notification();
         notification.setUser(user);
         notification.setMessage(message);
@@ -37,9 +38,9 @@ public class NotificationService {
     @Transactional
     public NotificationResponseDto getNotificationById(Long notificationId, Long userId) {
         Notification notification = repo.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
+                .orElseThrow(() -> new BadRequestException("Notification not found"));
         if (!notification.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You are not allowed to see this notification");
+            throw new BadRequestException("You are not allowed to see this notification");
         }
         return mapper.toResponse(notification);
     }
@@ -56,9 +57,9 @@ public class NotificationService {
     @Transactional
     public NotificationResponseDto markAsRead(Long notificationId, Long userId){
         Notification notification = repo.findById(notificationId)
-                .orElseThrow(() -> new RuntimeException("Notification not found"));
+                .orElseThrow(() -> new BadRequestException("Notification not found"));
         if (!notification.getUser().getId().equals(userId)) {
-            throw new RuntimeException("You are not allowed to modify this notification");
+            throw new BadRequestException("You are not allowed to modify this notification");
         }
         notification.setRead(true);
         Notification saved = repo.save(notification);
