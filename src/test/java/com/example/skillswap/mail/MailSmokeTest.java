@@ -1,6 +1,7 @@
 package com.example.skillswap.mail;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,6 +12,10 @@ import org.springframework.util.StringUtils;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@EnabledIfEnvironmentVariable(
+        named = "MAIL_SMOKE_TEST_ENABLED",
+        matches = "true"
+)
 class MailSmokeTest {
 
     @Autowired
